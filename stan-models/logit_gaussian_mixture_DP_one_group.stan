@@ -65,7 +65,7 @@ transformed parameters {
 model {
   array[K] real ps;
   
-  alpha ~ gamma(1, 1); 
+  alpha ~ gamma(5, 1);  // mean = a/b = shape/rate 
   v ~ beta(1, alpha);
 
   for(i in 1:N){

@@ -37,6 +37,5 @@ Rscript \$INDIR/src/transmission_flows/run_stan.R -indir \$INDIR -outdir \$CWD -
 cp -R --no-preserve=mode,ownership \$PWD/* \$OUTDIR
 EOF
 
-
 cd $OUTDIR
 qsub bash_$STAN_MODEL-$JOBNAME.pbs
