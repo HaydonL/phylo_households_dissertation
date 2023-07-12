@@ -8,8 +8,8 @@ mkdir $OUTDIR
 cat > $OUTDIR/bash_20k_run.pbs <<EOF
   
 #!/bin/sh
-#PBS -l walltime=24:00:00
-#PBS -l select=1:ncpus=4:ompthreads=1:mem=240gb
+#PBS -l walltime=08:00:00
+#PBS -l select=1:ncpus=10:ompthreads=1:mem=240gb
 #PBS -j oe
 module load anaconda3/personal
 source activate Renv # new line added
