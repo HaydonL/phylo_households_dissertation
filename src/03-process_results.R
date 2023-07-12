@@ -10,7 +10,7 @@ grid_theme <- function(){
         axis.title = element_blank())
 }
 
-fit <- readRDS(here::here("data", "rline_1_draws.rds"))
+fit <- readRDS(here::here("data", "rline_1_draws_flex.rds"))
 
 # Plot sampled densities
 
@@ -62,7 +62,7 @@ plot_density <- function(params, filename, K = 5, draw_no = NA){
 
 for (chain in 1:4){
   draw <- draws[1, chain,]
-  filename <- paste0("d1c", chain, ".pdf")
+  filename <- paste0("d1c", chain, "flex.pdf")
   plot_density(draw, filename = filename, draw_no = 1)
   cat("Chain", chain, "done")
 }
@@ -70,7 +70,7 @@ for (chain in 1:4){
 draw_indices <- seq(2000, 2500, by = 50)
 for (draw_no in draw_indices){
   draw <- draws[draw_no, 3,]
-  filename <- paste0("d", draw_no, "c3.pdf")
+  filename <- paste0("d", draw_no, "flexc3.pdf")
   plot_density(draw, filename = filename, draw_no = draw_no)
   cat("Draw", draw_no, "done")
 }

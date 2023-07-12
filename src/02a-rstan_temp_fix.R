@@ -6,7 +6,6 @@ library(label.switching)
 library(dplyr)
 
 filename <- here::here("data", "simulated", "rline_1.csv")
-modelpath <- here::here("stan-models", "beta_count_2D.stan")
 data <- read.csv(filename)
 
 ## DP one group 
@@ -21,11 +20,11 @@ stan_data <- list(
   max_age = 1
 )
 
-modelpath <- here::here("stan-models", "beta_mixture_DP_one_group.stan")
-fit <- stan(file = modelpath, data = stan_data, iter = 5500,
-            warmup = 2500, seed = 846125, chains = 4)
-saveRDS(fit, here::here("data", "rline_1_draws.rds"))
-fit <- readRDS(here::here("data", "rline_1_draws.rds"))
+modelpath <- here::here("stan-models", "beta_mixture_DP_one_group_flex_alpha.stan")
+fit <- stan(file = modelpath, data = stan_data, iter = 23000,
+            warmup = 3000, seed = 846125, chains = 4)
+saveRDS(fit, here::here("data", "rline_1_draws_flex.rds"))
+#fit <- readRDS(here::here("data", "rline_1_draws.rds"))
 print(fit, c("weights", "mus", "kappas", "psis", "pred_class", "lp__"))
 
 pdf("5_cluster_traceplot.pdf")
