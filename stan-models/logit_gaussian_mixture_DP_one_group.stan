@@ -1,30 +1,3 @@
-functions {
-  // Define bivariate beta density
-  real beta_bivariate_lpdf(row_vector age, real mu1, real kappa1, real mu2, real kappa2, real psi)
-  {
-  real density;
-  density = beta_proportion_lpdf(age[1] | mu1, kappa1) + beta_proportion_lpdf(age[2] | mu2, kappa2); // beta distributions
-  density = density + log(1 + psi*(age[1] - mu1) * (age[2] - mu2)); // account for correlation
-  return(density);
-  }
-  
-  vector calc_psi_bounds(real mu1, real mu2)
-  {
-    vector[2] bounds;
-    array[2] real min_array;
-    array[2] real max_array;
-    
-    min_array[1] = mu1 * mu2;
-    min_array[2] = (1 - mu1)*(1 - mu2);
-    max_array[1] = mu1 * (mu2 - 1);
-    max_array[2] = mu2 * (mu1 - 1);
-     
-    bounds[1] = -(1/max(min_array));
-    bounds[2] = -(1/min(max_array));
-    
-    return(bounds);
-  }
-}
 data {
   int<lower=1> N; // total number of observations
   int<lower=0> K;  // max number of clusters
@@ -35,6 +8,7 @@ data {
 }
 transformed data {
   matrix[N, 2] scaled_age = (ages - min_age)/(max_age - min_age); // scaled age of source and recipient (0,1)
+  matrix[N, 2] logit_age = logit(scaled_age);
   //int group_counts[N_group] = rep_array(0, N_group); // number of observations per group
   //for (k in 1:N){
   //  group_counts[group_nos[k]] = group_counts[group_nos[k]] + 1;
