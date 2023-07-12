@@ -8,7 +8,7 @@ int y[J,I]; // response  matrix
 parameters {
   simplex[C] alpha; // probabilities of being in one group
 
-   real <lower = 0, upper = 1> p[C, I];
+   real<lower = 0, upper = 1> p[C, I];
 }
 transformed parameters{
    vector[I] p_prod; 

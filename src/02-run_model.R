@@ -104,6 +104,41 @@ fit4 <- model4$sample(
 )
 
 fit4$summary()
+mcmc_hist(fit4$draws("mus"))
+mcmc_hist(fit4$draws("kappas"))
+
+draws4 <- fit4$draws(c("weights", "mus", "kappas", "psis", "pred_class", "lp__"))
+draws4 <- as_draws_matrix(draws4)
+
+
+post_pars <- fit4$draws(c("weights", "mus", "lp__"), format = "matrix")
+
+m = 3000 # of draws
+K = 3 # of classes
+J = 2 
+
+# initialize mcmc arrays
+mcmc <- array(data = NA, dim = c(m = m, K = K, J = J))
+
+# assign posterior draws to the array
+mcmc[, , 1] <- post_pars$weights
+for (i in 1:(J - 1)) {
+  mcmc[, , i + 1] <- post_pars$p[, , i]
+}
+
+# set of selected relabeling algorithm
+set <-
+  c("PRA",
+    "ECR",
+    "ECR-ITERATIVE-1",
+    "AIC",
+    "ECR-ITERATIVE-2",
+    "STEPHENS",
+    "DATA-BASED")
+
+# find the MAP draw as a pivot
+mapindex = which.max(post_pars$lp__)
+
 
 pdf("beta_mixture_DP_hist.pdf")
 mcmc_hist(fit4$draws("mus"))
@@ -138,4 +173,3 @@ fit5 <- model5$sample(
   iter_sampling = 2000
 )
 
-post_pars <- fit5$draws()
