@@ -9,8 +9,8 @@ if(length(args_line) > 0)
   indir <- args_line[[2]]
 }
 
-filename <- here::here("data", "simulated", "rline_1.csv")
-modelpath <- here::here("stan-models", "beta_mixture_DP_one_group_flex_alpha.stan")
+filename <- file.path(indir, "data", "simulated", "rline_1.csv")
+modelpath <- file.path(indir, "stan-models", "beta_mixture_DP_one_group_flex_alpha.stan")
 
 ## For use on laptop:
 #filename <- here::here("data", "simulated", "rline_1.csv")
