@@ -14,7 +14,8 @@ cat > $OUTDIR/bash_20k_run.pbs <<EOF
 module load anaconda3/personal
 source activate Renv # new line added
 
-Rscript $INDIR/src/run_20k.R
+cd $INDIR
+Rscript /src/run_20k.R
 
 EOF
 
