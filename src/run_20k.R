@@ -39,5 +39,5 @@ fit <- model$sample(
   iter_sampling = 20000
 )
 
-saveRDS(fit, file.path(indir, "data", "rline_1_draws_20k.rds"))
+fit$save_object(file.path(indir, "data", "rline_1_draws_20k.rds"))
 #saveRDS(fit, here::here("data", "rline_1_draws_20k.rds"))
