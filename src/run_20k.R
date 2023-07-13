@@ -12,11 +12,11 @@ if(length(args_line) > 0)
 filename <- file.path(indir, "data", "simulated", "rline_1.csv")
 modelpath <- file.path(indir, "stan-models", "beta_mixture_DP_one_group.stan")
 
-model <- cmdstan_model(modelpath)
-
 ## For use on laptop:
 #filename <- here::here("data", "simulated", "rline_1.csv")
 #modelpath <- here::here("stan-models", "beta_mixture_DP_one_group.stan")
+
+model <- cmdstan_model(modelpath)
 data <- read.csv(filename)
 
 K <- 5 # number of clusters
