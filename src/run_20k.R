@@ -1,5 +1,5 @@
 print("Running")
-library(rstan)
+library(cmdstanr)
 
 args_line <-  as.list(commandArgs(trailingOnly=TRUE))
 print(args_line)
@@ -11,6 +11,8 @@ if(length(args_line) > 0)
 
 filename <- file.path(indir, "data", "simulated", "rline_1.csv")
 modelpath <- file.path(indir, "stan-models", "beta_mixture_DP_one_group.stan")
+
+model <- cmdstan_model(modelpath)
 
 ## For use on laptop:
 #filename <- here::here("data", "simulated", "rline_1.csv")
@@ -27,6 +29,14 @@ stan_data <- list(
   max_age = 1
 )
 
-fit <- stan(file = modelpath, data = stan_data, iter = 23000,
-            warmup = 3000, seed = 538164, chains = 4, cores = 4)
+fit <- model$sample(
+  data = stan_data, 
+  seed = 538164, 
+  chains = 4,  
+  parallel_chains = 4,
+  refresh = 500,
+  iter_warmup = 3000,
+  iter_sampling = 20000
+)
+
 saveRDS(fit, here::here("data", "rline_1_draws_20k.rds"))
