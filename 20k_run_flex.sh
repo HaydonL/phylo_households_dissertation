@@ -12,12 +12,12 @@ cat > $OUTDIR/bash_20k_run_flex.pbs <<EOF
 #PBS -l select=1:ncpus=10:ompthreads=1:mem=240gb
 #PBS -j oe
 module load anaconda3/personal
-source activate Renv # new line added
+source activate Renv 
 
 INDIR=$INDIR
-Rscript \$INDIR/src/run_20k_flex.R
+Rscript \$INDIR/src/run_20k_flex.R -indir \$INDIR
 
 EOF
 
 cd $OUTDIR
-qsub bash_20k_run.pbs
+qsub bash_20k_run_flex.pbs
