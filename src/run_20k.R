@@ -1,8 +1,20 @@
 library(rstan)
 options(mc.cores = parallel::detectCores())
 
-filename <- here::here("data", "simulated", "rline_1.csv")
-modelpath <- here::here("stan-models", "beta_mixture_DP_one_group.stan")
+args_line <-  as.list(commandArgs(trailingOnly=TRUE))
+print(args_line)
+if(length(args_line) > 0)
+{
+  stopifnot(args_line[[1]]=='-indir')
+  indir <- args_line[[2]]
+}
+
+filename <- file.path(indir, "data", "simulated", "rline_1.csv")
+modelpath <- file.path(indir, "stan-models", "beta_mixture_DP_one_group.stan")
+
+## For use on laptop:
+#filename <- here::here("data", "simulated", "rline_1.csv")
+#modelpath <- here::here("stan-models", "beta_mixture_DP_one_group.stan")
 data <- read.csv(filename)
 
 K <- 5 # number of clusters
