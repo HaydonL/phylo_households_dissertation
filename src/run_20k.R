@@ -1,5 +1,5 @@
+print("Running")
 library(rstan)
-options(mc.cores = parallel::detectCores())
 
 args_line <-  as.list(commandArgs(trailingOnly=TRUE))
 print(args_line)
@@ -28,5 +28,5 @@ stan_data <- list(
 )
 
 fit <- stan(file = modelpath, data = stan_data, iter = 23000,
-            warmup = 3000, seed = 538164, chains = 4)
+            warmup = 3000, seed = 538164, chains = 4, cores = 4)
 saveRDS(fit, here::here("data", "rline_1_draws_20k.rds"))

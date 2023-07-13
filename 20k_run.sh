@@ -12,10 +12,10 @@ cat > $OUTDIR/bash_20k_run.pbs <<EOF
 #PBS -l select=1:ncpus=10:ompthreads=1:mem=240gb
 #PBS -j oe
 module load anaconda3/personal
-source activate Renv # new line added
+source activate Renv 
 
 INDIR=$INDIR
-Rscript \$INDIR/src/run_20k.R -indir \$INDIR
+Rscript \$INDIR/src/run_20k.R 
 
 EOF
 
