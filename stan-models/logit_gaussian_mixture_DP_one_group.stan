@@ -20,7 +20,6 @@ parameters {
   real<lower=0> eta; // rate for PP 
   array[K, 2] real<lower=0, upper=1> mus;
   array[K, 2] real<lower=0> kappas;
-  array[K] real psis;
 }
 
 transformed parameters {
