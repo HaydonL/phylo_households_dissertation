@@ -15,7 +15,7 @@ module load anaconda3/personal
 source activate Renv 
 
 INDIR=$INDIR
-Rscript \$INDIR/src/bash_20k_more_cluster.R -indir \$INDIR
+Rscript \$INDIR/src/run_20k_more_cluster.R -indir \$INDIR
 
 EOF
 
