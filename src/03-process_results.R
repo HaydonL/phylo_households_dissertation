@@ -3,6 +3,8 @@ library(ggpubr)
 library(dplyr)
 library(purrr)
 library(tidyr)
+library(bayesplot)
+library(posterior)
 source(here::here("helper-functions", "dbeta_bivariate.R"))
 
 grid_theme <- function(){
@@ -10,12 +12,14 @@ grid_theme <- function(){
         axis.title = element_blank())
 }
 
-fit <- readRDS(here::here("data", "rline_1_draws_flex.rds"))
+#fit <- readRDS(here::here("data", "rline_1_draws_flex.rds"))
+fit <- readRDS(here::here("data", "rline_1_draws_cluster_10.rds"))
 
 # Plot sampled densities
 
-draws <- rstan::extract(fit, c("weights", "mus", "kappas", "psis"), 
-                        permuted = FALSE)
+#draws <- rstan::extract(fit, c("weights", "mus", "kappas", "psis"), 
+#                        permuted = FALSE)
+draws <- fit$draws(c("weights", "mus", "kappas", "psis"))
 
 plot_density <- function(params, filename, K = 5, draw_no = NA){
   x <- seq(0, 1, by = 0.005)
@@ -60,6 +64,20 @@ plot_density <- function(params, filename, K = 5, draw_no = NA){
   print(final_plot)
 }
 
+
+# Extract data from cmdstanr object
+extract_data <- function(draws, chain_no, draw_no){
+  draws <- as_draws_list(draws)
+  chain_draw <- draws[[chain_no]]
+  output <- list()
+  
+  for (item in names(chain_draw)){
+    tmp <- chain_draw[item][[1]]
+    output[item] <- tmp[draw_no]
+  }
+  return(output)
+}
+  
 for (chain in 1:4){
   draw <- draws[1, chain,]
   filename <- paste0("d1c", chain, "flex.pdf")
@@ -67,9 +85,10 @@ for (chain in 1:4){
   cat("Chain", chain, "done")
 }
 
-draw_indices <- seq(2000, 2500, by = 50)
+draw_indices <- seq(1000, 20000, by = 1000)
 for (draw_no in draw_indices){
-  draw <- draws[draw_no, 3,]
+  #draw <- draws[draw_no, 3,]
+  draw <- extract_data(draws, 1, )
   filename <- paste0("d", draw_no, "flexc3.pdf")
   plot_density(draw, filename = filename, draw_no = draw_no)
   cat("Draw", draw_no, "done")
