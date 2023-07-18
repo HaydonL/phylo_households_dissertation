@@ -1,6 +1,2 @@
-/rds/general/user/phl19/home/git/phylo_households_dissertation/.gitignore="76D88812"
-/rds/general/user/phl19/home/git/phylo_households_dissertation/src/01-simulation.R="598EB492"
-/rds/general/user/phl19/home/git/phylo_households_dissertation/src/02a-rstan_temp_fix.R="91166932"
-/rds/general/user/phl19/home/git/phylo_households_dissertation/src/03-process_results.R="32CFA5FF"
-/rds/general/user/phl19/home/git/phylo_households_dissertation/src/run_20k.R="95BC936A"
-/rds/general/user/phl19/home/git/phylo_households_dissertation/src/run_20k_flex.R="0367EF88"
+C:/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/20k_run_more_cluster.sh="3B483BCA"
+C:/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/src/run_20k_more_cluster.R="BE4DA1EB"

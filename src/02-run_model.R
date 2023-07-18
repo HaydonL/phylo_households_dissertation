@@ -34,57 +34,11 @@ fit <- model$sample(
 fit$summary()
 mcmc_hist(fit$draws("mus"))
 
-## Test just poisson process
-  
-stan_data2 <- list(
-  N = dim(data)[1],
-  N_group = 1,
-  group_nos = rep(1, dim(data)[1])
-)
-
-modelpath2 <- here::here("stan-models", "poisson_test.stan")
-model2 <- cmdstan_model(modelpath2)
-
-fit2 <- model2$sample(
-  data = stan_data2, 
-  seed = 846125, 
-  chains = 4,  
-  parallel_chains = 4,
-  refresh = 500,
-  iter_warmup = 500,
-  iter_sampling = 2000
-)
-
-## Test just beta_indep
-
-stan_data3 <- list(
-  N = dim(data)[1],
-  ages = data,
-  min_age = 0,
-  max_age = 1
-)
-
-modelpath3 <- here::here("stan-models", "beta_indep_test.stan")
-model3 <- cmdstan_model(modelpath3)
-
-fit3 <- model3$sample(
-  data = stan_data3, 
-  seed = 846125, 
-  chains = 4,  
-  parallel_chains = 4,
-  refresh = 500,
-  iter_warmup = 500,
-  iter_sampling = 2000
-)
-
-mcmc_hist(fit3$draws("mus"))
-
-
 ## DP one group 
 
 stan_data4 <- list(
   N = dim(data)[1],
-  K = 3,
+  K = 6,
   ages = data,
   min_age = 0,
   max_age = 1
@@ -173,3 +127,22 @@ fit5 <- model5$sample(
   iter_sampling = 2000
 )
 
+# Test SG process
+
+modelpath6 <- here::here("stan-models", "beta_mixture_SG_one_group.stan")
+model6 <- cmdstan_model(modelpath6)
+
+fit6 <- model6$sample(
+  data = stan_data4, 
+  seed = 846125, 
+  chains = 4,  
+  parallel_chains = 4,
+  refresh = 500,
+  iter_warmup = 1000,
+  iter_sampling = 3000
+)
+
+mcmc_trace(fit6$draws("weights"))
+mcmc_trace(fit6$draws("alpha"))
+mcmc_trace(fit6$draws("eta"))
+mcmc_trace(fit6$draws("mus"))
