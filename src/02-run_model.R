@@ -138,11 +138,26 @@ fit6 <- model6$sample(
   chains = 4,  
   parallel_chains = 4,
   refresh = 500,
-  iter_warmup = 1000,
-  iter_sampling = 3000
+  iter_warmup = 3000,
+  iter_sampling = 10000
 )
 
+pdf("SG_trace_weights.pdf")
 mcmc_trace(fit6$draws("weights"))
+dev.off()
+
+pdf("SG_trace_alpha.pdf")
 mcmc_trace(fit6$draws("alpha"))
+dev.off()
+
+pdf("SG_trace_eta.pdf")
 mcmc_trace(fit6$draws("eta"))
+dev.off()
+
+pdf("SG_trace_mus.pdf")
 mcmc_trace(fit6$draws("mus"))
+dev.off()
+
+pdf("SG_trace_lp.pdf")
+mcmc_trace(fit6$draws("lp__"))
+dev.off()
