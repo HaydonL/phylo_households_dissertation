@@ -13,7 +13,8 @@ if(length(args_line) > 0)
 }
 
 # Process data
-pairs_tsi <- read.csv(here::here("data", "pairs_tsi.csv"))
+filename <- file.path(indir, "data", "pairs_tsi.csv")
+pairs_tsi <- read.csv(filename)
 
 setDT(pairs_tsi)
 pairs_tsi[, group := as.integer(2 * (SEX.SOURCE == "M") + same_hh)]
