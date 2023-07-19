@@ -1,23 +1,24 @@
-#' Generate distributions centred along the line y = x
+#' Generate distributions centred along the line y = x + offset
 #'
 #' @param n - positive integer, number of 2D observations wanted
 #' @param sd - positive real, noise around observation
+#' @param offset - positive real, between 0 and 1
 #'
 #' @return a 2 by n matrix containing observations from the required 
 #' distribution  
 #' @export
 #'
 #' @examples
-rline <- function(n, sd){
+roffset <- function(n, sd, offset){
   n_extra <- as.integer(1.5*n) # Initially generate more samples than needed
   output_x <- c()
   output_y <- c()
   
   # Re-sample until we have enough valid observations
   while(length(output_x) < n){
-    x <- runif(n_extra)
+    x <- runif(n_extra, 0, 1 - offset)
     errors <- rnorm(n_extra, 0, sd)
-    y <- x + errors
+    y <- x + offset + errors
     
     # Filter out observations where y not in (0,1)
     in_bounds <- y > 0 & y < 1

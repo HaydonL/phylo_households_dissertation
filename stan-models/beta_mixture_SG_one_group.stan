@@ -37,7 +37,7 @@ functions {
       s[j] = (-1)^(a + j) * j^(a - 2) * log(j) / (tgamma(j) * tgamma(m - j));
     }
     
-    density = (a - 1) * log(alpha) - prod(a_m) - log(sum(s));
+    density = (a - 1) * log(alpha) - sum(log(a_m)) - log(sum(s));
     return(density);
   }
 }

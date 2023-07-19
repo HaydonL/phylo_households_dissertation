@@ -5,11 +5,12 @@
 source(here::here("helper-functions", "simulate_PP.R"))
 source(here::here("helper-functions", "runif2D.R"))
 source(here::here("helper-functions", "rline.R"))
+source(here::here("helper-functions", "roffset.R"))
 
 outdir <- here::here("data", "simulated")
 set.seed(5417326)
 rate <- 200
-n_datasets <- 100
+n_datasets <- 50
 
 for (dataset_no in 1:n_datasets){
   filename <- paste0("/rline_", as.character(dataset_no), ".csv")
@@ -18,6 +19,14 @@ for (dataset_no in 1:n_datasets){
   
   filename <- paste0("/runif2D_", as.character(dataset_no), ".csv")
   data <- simulate_PP(rate, runif2D)
+  write.csv(data, paste0(outdir, filename), row.names = FALSE)
+  
+  filename <- paste0("/rthin_", as.character(dataset_no), ".csv")
+  data <- simulate_PP(rate, rline, sd = 0.01)
+  write.csv(data, paste0(outdir, filename), row.names = FALSE)
+  
+  filename <- paste0("/roffset_", as.character(dataset_no), ".csv")
+  data <- simulate_PP(rate, roffset, sd = 0.05, offset = 0.3)
   write.csv(data, paste0(outdir, filename), row.names = FALSE)
 }
 
