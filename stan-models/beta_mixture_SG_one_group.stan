@@ -81,7 +81,7 @@ transformed parameters {
 model {
   array[K] real ps;
   
-  alpha ~ SGb1(2, 3);  
+  alpha ~ SGb1(K, 10);  
   v ~ beta(1, alpha);
 
   for(i in 1:N){

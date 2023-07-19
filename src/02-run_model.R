@@ -138,8 +138,9 @@ fit6 <- model6$sample(
   chains = 4,  
   parallel_chains = 4,
   refresh = 500,
-  iter_warmup = 3000,
-  iter_sampling = 10000
+  iter_warmup = 5000,
+  iter_sampling = 10000,
+  adapt_delta = 0.999
 )
 
 pdf("SG_trace_weights.pdf")
