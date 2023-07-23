@@ -1,7 +1,24 @@
-Description of different stan models
 
-beta_mixture_DP_one_group.stan
+# The models
+
+This folder contains all the stan code necessary to run the models. A
+description of the models is as follows:
+
+- `beta_count_2D.stan` : A Poisson Process model with a single bivariate beta 
+density for one group on observations.
+- `beta_mixture_DP_one_group.stan` : A Poisson Process with a Dirichlet process
+mixture of up to $K$ (user-specified in the data input) clusters of bivariate
+beta distributions.
+- `beta_mixture_SG_one_group.stan` : Same as above but with a Stirling-Gamma
+process/prior.
+- `logit_gaussian_mixture_DP_one_group` : As above but with a DP mixture of
+Gaussian distributions for data transformed by a linear map to (0, 1) and then a
+logit transformation. (CODE WIP)
+
+The subfolder named `examples` contains stan code from various sources and used 
+as reference material when building my own models.
  
+WIP below:
 \[
     \begin{aligned}
     a &\sim PP(\eta \pi()) \\
