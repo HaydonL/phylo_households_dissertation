@@ -48,6 +48,9 @@ for (group_no in 0:3){
   )
   
   draws <- fit$draws()
-  saveRDS(draws, file.path(indir, "data", "SG_K6_aK_m10", 
-                           paste0("pairs_tsi_draws_", group_no, ".rds")))
+  filepath <- file.path(indir, "data", "SG_K6_aK_m10", 
+                        paste0("pairs_tsi_draws_", group_no, ".rds"))
+  fit$save_object(filepath)
+  #saveRDS(draws, file.path(indir, "data", "SG_K6_aK_m10", 
+  #                         paste0("pairs_tsi_draws_", group_no, ".rds")))
 }
