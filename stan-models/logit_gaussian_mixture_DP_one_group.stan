@@ -18,8 +18,8 @@ parameters {
   vector<lower=0,upper=1>[K - 1] v;  // stickbreak components
   real<lower=0> alpha;  // hyper prior DP(alpha, base)
   real<lower=0> eta; // rate for PP 
-  array[K, 2] real<lower=0, upper=1> mus;
-  array[K, 2] real<lower=0> kappas;
+  array[K] vector[2] mus;
+  array[K] cov_matrix[2] Sigmas;
 }
 
 transformed parameters {
@@ -29,10 +29,6 @@ transformed parameters {
   weights[1] = v[1];
   weights[2:(K-1)] = v[2:(K-1)] .* cumprod_one_minus_v[1:(K-2)];
   weights[K] = cumprod_one_minus_v[K - 1];
-  array[K] vector[2] psi_bounds;
-    for (k in 1:K){
-        psi_bounds[k] = calc_psi_bounds(mus[k, 1], mus[k, 2]);
-    }
 }
 
 model {
@@ -43,15 +39,14 @@ model {
 
   for(i in 1:N){
     for(k in 1:K){
-      ps[k] = log(weights[k]) + beta_bivariate_lpdf(scaled_age[i] | mus[k,1], kappas[k,1], mus[k,2], kappas[k,2], psis[k]);
+      ps[k] = log(weights[k]) + multi_normal_lpdf(logit_age[i] | mus[k], Sigmas[k]);
     }
     target += log_sum_exp(ps);
   }
   
   for (k in 1:K){
     mus[k] ~ uniform(0, 1);
-    kappas[k] ~ inv_gamma(2, 2);
-    psis[k] ~ uniform(psi_bounds[k, 1], psi_bounds[k, 2]);
+    kappas[k] ~ inv_gamma(2, 2); // Set priors for MVN params
   }
     
   N ~ poisson(eta);
@@ -64,7 +59,7 @@ generated quantities {
 
 for (i in 1:N){
   for (k in 1:K){
-        lmix[k] = log(weights[k]) + beta_bivariate_lpdf(scaled_age[i] | mus[k,1], kappas[k,1], mus[k,2], kappas[k,2], psis[k]);
+        lmix[k] = log(weights[k]) + multi_normal_lpdf(logit_age[i] | mus[k], Sigmas[k]);
   }
   for (k in 1:K){
         pred_class[i][k] = exp((lmix[k])-log_sum_exp(lmix));

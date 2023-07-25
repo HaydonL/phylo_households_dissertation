@@ -27,7 +27,7 @@ model <- cmdstan_model(modelpath)
 for (group_no in 0:3){
   
   data <- pairs_tsi[group == group_no]
-  stan_data <= list(
+  stan_data <- list(
     N = data[, .N],
     K = K,
     ages = as.matrix(data[, .(AGE_TRANSMISSION.SOURCE, 

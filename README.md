@@ -14,6 +14,8 @@ scripts such as one for simulating data from a Poisson Process.
 - plots : dumping ground for plots for now. (messy)
 - misc : redundant/unused scripts and some source material.
 
+Note: the data folder is not available on github. Simulated data may be
+generated using the `01-simulation.R` script in the `src` folder.
 ### Packages:
 
 here

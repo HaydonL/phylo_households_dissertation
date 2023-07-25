@@ -44,10 +44,11 @@ beta_corr <- function(mus, kappas, psi){
   return(corr)
 }
 
-mus <- c(0.5, 0.5)
-psi <- 4
-kappas <- c(10, 10)
+mus <- c(0.5, 0.9)
+kappas <- c(10, 0.1)
+psi <- 0.7
 
+plot_beta(mus, kappas, psi)
 psi_bounds(mus)
 # Need psi > - (1/ min(mu1 - mu2))
 
