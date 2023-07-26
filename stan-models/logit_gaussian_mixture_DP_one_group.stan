@@ -20,6 +20,7 @@ parameters {
   real<lower=0> eta; // rate for PP 
   array[K] vector[2] mus;
   array[K] cov_matrix[2] Sigmas;
+  array[2] real<lower=0> sigma_mus;
 }
 
 transformed parameters {
@@ -45,10 +46,11 @@ model {
   }
   
   for (k in 1:K){
-    mus[k] ~ uniform(0, 1);
-    kappas[k] ~ inv_gamma(2, 2); // Set priors for MVN params
+    mus[k] ~ normal(0, sigma_mus);
+    Sigmas[k] ~ inv_wishart(3, diag_matrix([1, 1]')); // Set priors for MVN params
   }
-    
+  
+  sigma_mus ~ cauchy(0, 1);
   N ~ poisson(eta);
 }
 generated quantities {

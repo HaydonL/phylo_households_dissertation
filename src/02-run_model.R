@@ -162,3 +162,16 @@ dev.off()
 pdf("SG_trace_lp.pdf")
 mcmc_trace(fit6$draws("lp__"))
 dev.off()
+
+modelpath7 <- here::here("stan-models", "logit_gaussian_mixture_DP_one_group.stan")
+model7 <- cmdstan_model(modelpath7)
+
+fit7 <- model7$sample(
+  data = stan_data4, 
+  seed = 846125, 
+  chains = 4,  
+  parallel_chains = 4,
+  refresh = 500,
+  iter_warmup = 3000,
+  iter_sampling = 5000
+)
