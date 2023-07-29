@@ -21,7 +21,7 @@ parameters {
   array[K] vector[2] mus;
   array[K] cov_matrix[2] Qs;
   array[2] real<lower=0> sigma_mus;
-  array[2] real<lower=0> ds;
+  vector<lower=0>[2] ds;
 }
 
 transformed parameters {
@@ -35,7 +35,7 @@ transformed parameters {
   array[K] cov_matrix[2] Sigmas;
   matrix[2, 2] D = diag_matrix(ds);
   for (k in 1:K){
-    Sigmas[k] = D * Q[k] * D;
+    Sigmas[k] = D * Qs[k] * D;
   }
 }
 
@@ -54,10 +54,10 @@ model {
   
   for (k in 1:K){
     mus[k] ~ normal(0, sigma_mus);
-    Q[k] ~ inv_wishart(3, diag_matrix([1, 1]'))
+    Qs[k] ~ inv_wishart(3, diag_matrix([1, 1]'));
   }
   
-  ds ~ lognormal(0, 1)
+  ds ~ lognormal(0, 1);
   sigma_mus ~ cauchy(0, 1);
   N ~ poisson(eta);
 }

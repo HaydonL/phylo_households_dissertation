@@ -163,7 +163,7 @@ pdf("SG_trace_lp.pdf")
 mcmc_trace(fit6$draws("lp__"))
 dev.off()
 
-modelpath7 <- here::here("stan-models", "logit_gaussian_mixture_DP_one_group.stan")
+modelpath7 <- here::here("stan-models", "logit_SG_IW.stan")
 model7 <- cmdstan_model(modelpath7)
 
 fit7 <- model7$sample(
@@ -171,7 +171,12 @@ fit7 <- model7$sample(
   seed = 846125, 
   chains = 4,  
   parallel_chains = 4,
-  refresh = 500,
-  iter_warmup = 3000,
-  iter_sampling = 5000
+  refresh = 200,
+  iter_warmup = 1000,
+  iter_sampling = 2000,
+  adapt_delta = 0.99
 )
+
+mcmc_trace(fit7$draws("weights"))
+
+saveRDS(fit7, here::here("data", "logit_SG_IW_fit.rds"))

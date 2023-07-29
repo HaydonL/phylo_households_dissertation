@@ -8,8 +8,26 @@
 #' @export
 #'
 #' @examples
-simulate_PP <- function(rate, rsample, ...){
-  n_obs <- rpois(1, rate) # Sample total number of observations
-  coords <- rsample(n_obs, ...) # Sample coordinates of observations
-  return(as.data.frame(coords))
+simulate_PP <- function(rates, rsamplers, params){
+  
+  n_groups <- length(rates)
+  coords_list <- list()
+  
+  for (group in 1:n_groups){
+    rate <- rates[group]
+    rsample <- rsamplers[[group]]
+    param_list <- params[[group]]
+    
+    n_obs <- rpois(1, rate) # Sample total number of observations
+    param_list$n <- n_obs
+    
+    coords <- do.call(rsample, param_list) # Sample coordinates of observations
+    coords <- cbind(coords, rep(group, n_obs))
+    coords_list[[group]] <- coords
+  }
+  
+  # Combine coordinate data
+  data <- as.data.frame(do.call(rbind, coords_list))
+  names(data) <- c("x", "y", "group")
+  return(as.data.frame(data))
 }
