@@ -19,9 +19,9 @@ pairs_tsi <- read.csv(filename)
 setDT(pairs_tsi)
 pairs_tsi[, group := as.integer(2 * (SEX.SOURCE == "M") + same_hh)]
 
-K <- 6
+K <- 5
 
-modelpath <- file.path(indir, "stan-models", "beta_mixture_SG_one_group.stan")
+modelpath <- file.path(indir, "stan-models", "logit_gassuain_DP.stan")
 model <- cmdstan_model(modelpath)
 
 for (group_no in 0:3){
