@@ -6,7 +6,8 @@ library(data.table)
 color_scheme_set("brightblue")
 
 filename <- here::here("data", "pairs_tsi.csv")
-modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP.stan")
+#modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP.stan")
+modelpath <- here::here("stan-models", "beta_mixture_DP.stan")
 pairs_tsi <- read.csv(filename)
 
 setDT(pairs_tsi)
@@ -36,3 +37,11 @@ fit <- model$sample(
 )
 
 fit$save_object(here::here("data", "logit_pairs_draws.rds"))
+
+source(here::here("helper-functions", "plot_normal.R"))
+plot_normal(fit, 1, 1, 1, "a", 5)
+ggsave("logit_data_gp1.pdf")
+
+pairs_group1 <- pairs_tsi[group == 1][, .(AGE_TRANSMISSION.SOURCE, 
+                          AGE_INFECTION.RECIPIENT)]
+plot(pairs_group1, xlim = c(15, 50), ylim = c(15, 50))
