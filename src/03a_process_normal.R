@@ -80,3 +80,11 @@ plot_normal <- function(params, filename, K = 5, draw_no = NA){
 
 params <- extract_data(draws, 3, 1000)
 plot_normal(params, "logit_SG_IW_plots.pdf", K = 6)
+
+source(here::here("helper-functions", "plot_normal.R"))
+plot_normal(fit, 1, 1, 1, "a", 5)
+ggsave("logit_data_gp1.pdf")
+
+pairs_group1 <- pairs_tsi[group == 1][, .(AGE_TRANSMISSION.SOURCE, 
+                                          AGE_INFECTION.RECIPIENT)]
+plot(pairs_group1, xlim = c(15, 50), ylim = c(15, 50))

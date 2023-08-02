@@ -6,7 +6,7 @@ library(data.table)
 color_scheme_set("brightblue")
 
 filename <- here::here("data", "pairs_tsi.csv")
-modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP.stan")
+modelpath <- here::here("stan-models", "beta_mixture_DP.stan")
 pairs_tsi <- read.csv(filename)
 
 setDT(pairs_tsi)
@@ -35,4 +35,4 @@ fit <- model$sample(
   iter_sampling = 5000
 )
 
-fit$save_object(here::here("data", "logit_pairs_draws.rds"))
+fit$save_object(here::here("data", "beta_pairs_draws.rds"))
