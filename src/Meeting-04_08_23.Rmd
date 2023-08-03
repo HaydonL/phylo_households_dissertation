@@ -1,0 +1,82 @@
+---
+title: "Meeting 04/08/23"
+output: html_document
+date: "2023-08-03"
+---
+
+```{r setup, include=FALSE}
+# Load in packages and data
+library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(ggplot2)
+fit <- readRDS(here::here("data", "logit_pairs_draws.rds"))
+```
+
+# Infections by transmission type
+
+We produce plots showing the posterior distribution of the proportion of infections from each group. The groups are:
+
+1 : Female to male, out-of-household
+2 : Female to male, same household 
+3 : Male to female, out-of-household
+4 : Male to female, same household
+
+```{r}
+# Extract rates (eta)
+eta_draws <- as_draws_matrix(fit$draws("eta"))
+eta_sums <- rowSums(eta_draws)
+
+eta_prop <- eta_draws / eta_sums
+
+# Plot histograms of proportions
+for(group in 1:4){
+  p <- ggplot() + geom_histogram(aes(x = eta_prop[, group])) + 
+    labs(title = paste("Histogram of proportions - group", group),
+         x = "Proportion", y = "Frequency",
+         caption = "For four chains with 5,000 iterations each")
+  print(p)
+}
+
+# Print out summary statistics
+summary(eta_prop)
+```
+We can see that the plurality of infections are M -> F and out-of-household. In
+fact, a majority of cases are indeed out-of-household, though there seems to be
+a considerable amount of within household transmission too.
+
+As of right now, some of the parameters have a concerning Rhat value (but this
+should hopefully change with ordered model, fingers crossed!)
+
+
+
+# Resulting densities
+
+We now plot the underlying distributions for each transmission type for one 
+sample from the posterior distribution.
+
+(What is the best way to aggregate the samples? Perhaps generate densities for 
+every 50 iterations and take the mean at each grid point for plotting? May be 
+computationally expensive to take mean of all)
+
+```{r}
+source(here::here("helper-functions", "plot_normal.R"))
+
+set.seed(635261)
+
+# Randomly choose draw and chain number
+draw_no <- sample(5000, 1)
+chain_no <- sample(4, 1)
+
+# Plot densities for all groups
+for (group in 1:4){
+  print("Plotting", group) # progress bar!
+  plot_normal(fit, chain_no, draw_no, group, "not_in_use")
+}
+```
+
+Compare to the results from the kde analysis:
+
+![Caption](/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/images/goose.jpeg)
+
+
