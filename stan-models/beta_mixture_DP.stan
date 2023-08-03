@@ -64,8 +64,8 @@ transformed parameters {
   array[N_group, K] vector[2] psi_bounds;
   for (group in 1:N_group){
     for (k in 1:K){
-        psi_bounds[N_group, k] = calc_psi_bounds(mus[N_group, k, 1], 
-                                                 mus[N_group, k, 2]);
+        psi_bounds[group, k] = calc_psi_bounds(mus[group, k, 1], 
+                                                 mus[group, k, 2]);
     }
   }
 }
