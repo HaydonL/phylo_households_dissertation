@@ -77,7 +77,9 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, filename, K = 5,
     scale_fill_gradient(low = "white", high = "red")
   plots[[K + 1]] <- p 
   
-  final_plot <- ggarrange(plotlist = plots, nrow = 3, ncol = 3)
+  final_plot <- ggarrange(plotlist = plots, nrow = 3, ncol = 3, 
+                          common.legend = TRUE)
   #ggsave(filename, final_plot, width = 7, height = 7)
   print(final_plot)
+  return(density_list)
 }

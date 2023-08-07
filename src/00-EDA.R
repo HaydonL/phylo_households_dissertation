@@ -74,8 +74,11 @@ get_contour <- function(kd_out=kd, prob="5%") {
 plot_kernel <- function(sex, hh){
   d <- pairs_tsi %>% filter(same_hh == hh) %>% 
     filter(SEX.SOURCE == sex) %>%
-    dplyr::select(AGE_TRANSMISSION.SOURCE, AGE_INFECTION.RECIPIENT) %>%
-    as.matrix() %>%
+    dplyr::select(AGE_TRANSMISSION.SOURCE, AGE_INFECTION.RECIPIENT)
+  d <- (d - 15)/35
+  d <- log(d / (1 - d))
+    
+  d <- as.matrix(d) %>%
     magrittr::set_colnames(c("x", "y")) %>% 
     as_tibble()
   
@@ -83,7 +86,7 @@ plot_kernel <- function(sex, hh){
   
   dat_out <- map_dfr(c("10%", "20%", "50%" ,"80%", "90%"), ~get_contour(kd, .)) %>% 
     group_by(prob) %>% 
-    mutate(n_val = 1:n()) %>% 
+    mutate(n_val = 1:845) %>% 
     ungroup()
   
   ## clean kde output
@@ -97,8 +100,8 @@ plot_kernel <- function(sex, hh){
     geom_text(aes(label = prob), data = 
                 filter(dat_out, (prob%in% c("10%") & n_val==100 | prob%in% c("20%") & n_val==80) | prob%in% c("50%") & n_val==60 | prob%in% c("80%") & n_val==40 | prob%in% c("90%") & n_val==20),
               colour = I("black"), size =I(3))+
-    xlim(15,50)+
-    ylim(15,50)+
+    #xlim(15,50)+
+    #ylim(15,50)+
     geom_abline(intercept=0,slope=1,color='black')+
     scale_fill_gradient(low = "white", high = "red") +
     labs(x='Age of recipient at transmission ',

@@ -41,7 +41,7 @@ model {
   array[N_group, K] real ps;
   
   group_counts ~ poisson(eta);
-  alpha ~ gamma(5, 1);  // mean = a/b = shape/rate 
+  alpha ~ gamma(10, 10);  // mean = a/b = shape/rate 
   
   for (group in 1:N_group){
     v[group] ~ beta(1, alpha[group]);

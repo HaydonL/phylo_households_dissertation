@@ -1,12 +1,14 @@
 ---
 title: "Meeting 04/08/23"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-08-03"
 ---
 
 ```{r setup, include=FALSE}
 # Load in packages and data
-library(cmdstanr)
+#library(cmdstanr)
 library(posterior)
 library(bayesplot)
 library(ggplot2)
@@ -39,7 +41,7 @@ for(group in 1:4){
 }
 
 # Print out summary statistics
-summary(eta_prop)
+print(summary(eta_prop))
 ```
 We can see that the plurality of infections are M -> F and out-of-household. In
 fact, a majority of cases are indeed out-of-household, though there seems to be
@@ -48,7 +50,14 @@ a considerable amount of within household transmission too.
 As of right now, some of the parameters have a concerning Rhat value (but this
 should hopefully change with ordered model, fingers crossed!)
 
+```{r}
+# Check proportion of HH vs OOH
+eta_HH_prop <- rowSums(eta_prop[, c(2,4)])
+summary(eta_HH_prop)
+print(quantile(eta_HH_prop, c(0.025, 0.975))) # 95% CI
+```
 
+![Caption](/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/images/infections_round.jpg)
 
 # Resulting densities
 
@@ -68,15 +77,70 @@ set.seed(635261)
 draw_no <- sample(5000, 1)
 chain_no <- sample(4, 1)
 
+densities <- list()
+
 # Plot densities for all groups
 for (group in 1:4){
-  print("Plotting", group) # progress bar!
-  plot_normal(fit, chain_no, draw_no, group, "not_in_use")
+  cat("Plotting", group, "\n") # progress bar!
+  density[[group]] <- plot_normal(fit, chain_no, draw_no, group, "not_in_use")
 }
 ```
 
 Compare to the results from the kde analysis:
 
-![Caption](/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/images/goose.jpeg)
+![Caption](/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/images/contour_MF.jpg)
 
 
+![Caption](/Users/haydo/OneDrive/Desktop/MSc Statistics/Summer Term/dissertation/images/contour_FM.jpg)
+
+
+
+# Diagnosis on ordered model
+
+```{r}
+fit_ordered <- readRDS(here::here("data", "logit_pairs_draws_ordered.rds"))
+print(fit_ordered, max_rows = 200)
+
+
+```
+
+
+The first group seems to have a bit of issues with mixing, so let's plot their traces:
+
+```{r}
+# Plot mu_1 for group 1
+mcmc_trace(fit_ordered$draws((c("mus_1[1,1]", "mus_1[1,2]", "mus_1[1,3]",
+                                "mus_1[1,4]","mus_1[1,5]"))))
+```
+
+```{r}
+#mcmc_hex(fit_ordered$draws((c("mus_1[1,1]", "mus_1[1,2]"))))
+mus <- c("mus_1[1,1]", "mus_1[1,2]", "mus_2[1,1]", "mus_2[1,2]")
+tmp <- posterior::as_draws(fit_ordered, format='data.frame') %>%
+  setDT() %>% 
+  subset(.draw < 500, select=mus) %>% 
+  melt(.vars='.draw')
+?melt.data.table
+'.draw' %in% names(tmp)
+  names(tmp)
+tmp[,  cluster := as.factor( gsub('^.*([1-2])\\]$','\\1',variable) )]
+tmp[, chord := as.factor( gsub('^mus_([1-2]).*$','\\1',variable) )]
+tmp[, variable := NULL]
+tmp
+dcast(tmp, cluster   ~ chord + .draw , value.var = 'value')
+```
+
+```{r}
+# Plot alpha for group 1
+mcmc_trace(fit_ordered$draws("alpha[1]"))
+```
+
+Perhaps chain 4 is the issue?
+
+```{r}
+# Plot weights for group 1
+mcmc_trace(fit_ordered$draws((c("weights[1,1]", "weights[1,2]", "weights[1,3]",
+                                "weights[1,4]","weights[1,5]"))))
+```
+
+Probably still multi-modal, two main clusters. All chains identify the last three clusters to be undesirable. No idea why chain 4 suddendly stopped working in the middle.

@@ -1,0 +1,39 @@
+---
+title: "Meeting 09-08-23"
+output: html_document
+date: "2023-08-07"
+---
+
+```{r setup, include=FALSE}
+# Load in packages and data
+#library(cmdstanr)
+library(posterior)
+library(bayesplot)
+library(ggplot2)
+```
+
+## 1.1 Is there still as sizeable proportion of infections occuring within household?
+
+```{r}
+# Load CmdStanR fits
+fit_norm <- readRDS(here::here("data", "logit_pairs_draws_ordered.rds"))
+#fit_beta <- readRDS(here::here("data", "beta_pairs_draws_ordered.rds"))
+
+# Extract rates (eta)
+eta_draws <- as_draws_matrix(fit_norm$draws("eta"))
+eta_sums <- rowSums(eta_draws)
+
+eta_prop <- eta_draws / eta_sums
+
+# Check proportion of HH vs OOH
+eta_HH_prop <- rowSums(eta_prop[, c(2,4)])
+summary(eta_HH_prop)
+print(quantile(eta_HH_prop, c(0.025, 0.975))) # 95% CI
+```
+
+## 1.2 Does HH proportion change with community (fishing vs inland?)
+
+```{r}
+# Load CmdStanR fit
+fit_1-2 <- read
+```
