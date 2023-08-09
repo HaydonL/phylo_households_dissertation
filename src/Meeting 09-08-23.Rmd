@@ -1,12 +1,14 @@
 ---
 title: "Meeting 09-08-23"
-output: html_document
+output:
+  pdf_document: default
+  html_document: default
 date: "2023-08-07"
 ---
 
 ```{r setup, include=FALSE}
 # Load in packages and data
-#library(cmdstanr)
+library(cmdstanr)
 library(posterior)
 library(bayesplot)
 library(ggplot2)
@@ -15,7 +17,12 @@ library(data.table)
 
 ## 1.1 Is there still as sizeable proportion of infections occuring within household?
 
-Using the logit model which includes all the data:
+Using the logit model which includes all the data. Recall from the previous Rmd:
+
+1 : Female to male, out-of-household
+2 : Female to male, same household 
+3 : Male to female, out-of-household
+4 : Male to female, same household
 
 ```{r}
 # Load CmdStanR fits
@@ -51,7 +58,7 @@ same_hh_pairs <- pairs_tsi[same_hh == 1]
 source_comm <- same_hh_pairs[,.(COMM.SOURCE)]
 recip_comm <- same_hh_pairs[,.(COMM.RECIPIENT)]
 
-source_comm == recip_comm
+t(source_comm == recip_comm) # Observation 81 is false
 ```
 
 The 81st entry of the same_hh data set has a source and recipient from the same household but different community! Do we ignore this data point? (Yes in this 
@@ -59,18 +66,162 @@ model).
 
 We should fit the model to four groups:
 
-- Same household, fishing
-- Same household, inland
-- Different household, fishing*
-- Different household, inland*
+- Same household, fishing (1)
+- Same household, inland (2)
+- Different household, fishing* (4)
+- Different household, inland* (5)
 
 But how do we decide which community if the source and recipient are not from
 the same community? Just from source/recipient community or add a seperate group
-from an inter-community transmission. (The model picked uses the last option, so
+from an inter-community transmission (3). (The model picked uses the last option, so
 we now have five groups)
 
 
 ```{r}
 # Load CmdStanR fit
-fit_1-2 <- readRDS(here::here("data", "logit_pairs_draws_1-2.rds"))
+fit_1_2 <- readRDS(here::here("data", "logit_pairs_draws_1-2.rds"))
+print(fit_1_2, max_rows = 1000)
+```
+
+Now we calculate confidence intervals for the proportion of HH infections for
+both fishing and inland communities:
+
+```{r}
+# Extract rates (eta)
+eta_draws <- as_draws_matrix(fit_1_2$draws("eta"))
+eta_sums <- rowSums(eta_draws)
+
+eta_prop <- eta_draws / eta_sums
+
+# Check proportion of HH vs OOH for both fishing and inland
+eta_HH_fishing <- eta_prop[, 1] / rowSums(eta_prop[, c(1, 4)])
+eta_HH_inland <- eta_prop[, 2] / rowSums(eta_prop[, c(2, 5)])
+
+print(quantile(eta_HH_fishing, c(0.025, 0.975))) # 95% CI
+print(quantile(eta_HH_inland, c(0.025, 0.975))) # 95% CI
+```
+
+The confidence intervals have a good amount of overlap which suggests there 
+might not be any change in proportion of infections which are within HH between
+the two communities.
+
+## 1.3 Is the proportion of HH transmissions larger MF or FM?
+
+We use the same model and draws from Q1.1:
+
+```{r}
+# Extract rates (eta)
+eta_draws <- as_draws_matrix(fit_norm$draws("eta"))
+eta_sums <- rowSums(eta_draws)
+
+eta_prop <- eta_draws / eta_sums
+
+# Check proportion of HH vs OOH for both MF and FM
+eta_HH_MF <- eta_prop[, 4] / rowSums(eta_prop[, c(3, 4)])
+eta_HH_FM <- eta_prop[, 2] / rowSums(eta_prop[, c(1, 2)])
+
+print(quantile(eta_HH_MF, c(0.025, 0.975))) # 95% CI
+print(quantile(eta_HH_FM, c(0.025, 0.975))) # 95% CI
+```
+
+Again, there is a significant overlap it seems so potentially not a huge
+difference.
+
+## 3
+
+We use the same fit as above. We treat "young" as being aged 15-24.
+
+```{r}
+#library(parallel)
+#n_cores <- detectCores() - 1
+source(here::here("helper-functions", "plot_normal.R"))
+
+ages <- seq(15.5, 49.5, by = 1)
+draws <- seq(100, 5000, by = 100)
+grid <- expand.grid(ages, ages)
+
+final_intensities <- list() # one entry per group
+eta_draws <- as_draws_matrix(fit_norm$draws("eta"))
+
+for (group in 1:4){
+  # Calculate densities for 50 iterations
+  intensities <- lapply(draws, plot_normal, fit = fit_norm, chain_no = 1, 
+                  group_no = group, ages = ages, plot = FALSE)
+  etas <- as.numeric(eta_draws[draws, group])
+  
+  for (index in 1:length(etas)){
+    intensities[[index]] <- etas[index] * intensities[[index]]
+  }
+  
+  # Calculate mean density
+  intensity_matrix <- matrix(unlist(intensities), nrow = 50, byrow = TRUE)
+  final_intensity <- apply(intensity_matrix, 2, mean)
+  final_intensities[[group]] <- final_intensity
+}
+```
+
+# 3.1 Are young men predominantly affected by older women through non-HH?
+
+We want the F -> M groups for HH and non-HH respectively (so group 1 for OOH and
+group 2 for HH)
+
+```{r}
+# Extract relevant intensities and combine into one data.table
+intensity_FM_OOH <- final_intensities[[1]]
+intensity_FM_HH <- final_intensities[[2]]
+
+recip_15_24_indices <- which(grid$Var2 < 24) # X: Source, Y: Recipient
+
+yng_grid <- grid[recip_15_24_indices, ]
+yng_grid$FM_OOH <- intensity_FM_OOH[recip_15_24_indices]
+yng_grid$FM_HH <- intensity_FM_HH[recip_15_24_indices]
+
+setDT(yng_grid)
+
+# Calculate intensities among young people by age of source
+yng_grid[, FM_OOH_sum := sum(FM_OOH), by = Var1]
+yng_grid[, FM_HH_sum := sum(FM_HH), by = Var1]
+
+# Drop unnecessary columns
+#yng_grid[, c("FM_OOH", "FM_HH", "Var2") := NULL]
+
+# Plot intensities
+
+p <- ggplot(yng_grid, aes(x = Var1)) + 
+  geom_line(aes(y = FM_OOH_sum, color = "Out-of-household")) +
+  geom_line(aes(y = FM_HH_sum, color = "Within household")) +
+  labs(x = "Age of source (Female)", y = "Relative intensity",
+       title = "FM transmission HH vs non-HH intensity",
+       caption = "Among young (16-24) recipients",
+       color = NULL)
+p
+```
+
+Now repeat the analysis for M -> F transmissions
+
+```{r}
+# Extract relevant intensities and add to previous data.table
+intensity_MF_OOH <- final_intensities[[3]]
+intensity_MF_HH <- final_intensities[[4]]
+
+yng_grid$MF_OOH <- intensity_MF_OOH[recip_15_24_indices]
+yng_grid$MF_HH <- intensity_MF_HH[recip_15_24_indices]
+
+# Calculate intensities among young people by age of source
+yng_grid[, MF_OOH_sum := sum(MF_OOH), by = Var1]
+yng_grid[, MF_HH_sum := sum(MF_HH), by = Var1]
+
+# Drop unnecessary columns
+#yng_grid[, c("MF_OOH", "MF_HH", "Var2") := NULL]
+
+# Plot intensities
+
+p <- ggplot(yng_grid, aes(x = Var1)) + 
+  geom_line(aes(y = MF_OOH_sum, color = "Out-of-household")) +
+  geom_line(aes(y = MF_HH_sum, color = "Within household")) +
+  labs(x = "Age of source (Male)", y = "Relative intensity",
+       title = "MF transmission HH vs non-HH intensity",
+       caption = "Among young (16-24) recipients",
+       color = NULL)
+p
 ```

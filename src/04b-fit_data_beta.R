@@ -6,7 +6,7 @@ library(data.table)
 color_scheme_set("brightblue")
 
 filename <- here::here("data", "pairs_tsi.csv")
-modelpath <- here::here("stan-models", "beta_mixture_DP.stan")
+modelpath <- here::here("stan-models", "beta_mixture_DP_ordered.stan")
 pairs_tsi <- read.csv(filename)
 
 setDT(pairs_tsi)
@@ -31,8 +31,9 @@ fit <- model$sample(
   chains = 4,  
   parallel_chains = 4,
   refresh = 500,
-  iter_warmup = 1000,
-  iter_sampling = 5000
+  iter_warmup = 3000,
+  iter_sampling = 5000,
+  adapt_delta = 0.95
 )
 
-fit$save_object(here::here("data", "beta_pairs_draws.rds"))
+fit$save_object(here::here("data", "beta_pairs_draws_ordered.rds"))
