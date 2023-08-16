@@ -1,4 +1,5 @@
-#' Extract the parameters from a CmdStanMCMC fit object
+library(posterior)
+#'Extract the parameters from a CmdStanMCMC fit object
 #'
 #' @param fit - CmdStanMCMC object from which to extract draws
 #' @param chain_no - positive integer, the chain to extract from

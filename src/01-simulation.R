@@ -19,7 +19,7 @@ params <- list()
 params[[1]] <- list()
 params[[2]] <- list(sd = 0.1)
 params[[3]] <- list(sd = 0.03)
-params[[4]] <- list(sd = 0.1, offset = 0.3)
+params[[4]] <- list(sd = 0.05, offset = 0.3)
 
 # Generate data
 for (dataset_no in 1:n_datasets){
@@ -27,3 +27,4 @@ for (dataset_no in 1:n_datasets){
   data <- simulate_PP(rates, rsamplers, params)
   write.csv(data, paste0(outdir, filename), row.names = FALSE)
 }
+

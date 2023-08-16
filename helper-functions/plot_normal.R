@@ -1,10 +1,12 @@
 library(mvtnorm)
 library(ggplot2)
-library(ggpubr)
+library(gridExtra)
 source(here::here("helper-functions", "extract_data.R"))
 source(here::here("helper-functions", "grid_theme.R"))
+source(here::here("helper-functions", "extract_legend.R"))
 #' Process the results from the logit normal model and produce a plots of the 
-#' sampled density for a given chain, draw, and group.
+#' sampled density for a given chain, draw, and group. Alternatively return the
+#' mixture density if not plotting
 #'
 #' @param fit - a CmdStanMCMC object containing the sampled posteriors
 #' @param chain_no - a positive integer, the chain number to be plotted
@@ -29,10 +31,10 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
   scaled_x <- (x - min_age) / (max_age - min_age) # linearly scaled ages
   logit_x <- log(scaled_x / (1 - scaled_x)) # logit scaled ages
   density_list <- list()
-  plots <- list()
   weight_names <- paste0("weights[", group_no, ",", 1:K, "]")
   weights <- as.numeric(params[weight_names])
   
+  # Calculate densities for each cluster
   for (k in 1:K){
     x_grid <- expand.grid(x, x)
     sx_grid <- expand.grid(scaled_x, scaled_x)
@@ -58,35 +60,58 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
                                           sx_grid$Var2 * (1 - sx_grid$Var2))
     x_grid$density <- x_grid$density / (max_age - min_age)^2
     density_list[[k]] <- x_grid$density
-    
-    if (plot){
-      p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) +
-        grid_theme() + labs(title = paste0("Cluster ", k, " weight = ", 
-                                           signif(weights[k]), 3)) +
-        scale_fill_gradient(low = "white", high = "red")
-      plots[[k]] <- p
-    }
+    cat("Cluster", k, "done\n")
   }
-  # Final plot
+  
+  # Calculate final mixture density
   full_density <- rep(0, length(x_grid$density))
   
   for (k in 1:K){
     full_density <- full_density + weights[k] * density_list[[k]]
   }
   
-  x_grid$density <- full_density
-  
+  # Generate plot if required
   if (plot){
+    max_point <- max(unlist(full_density))
+    plots <- list()
+    
+    # Store plots for each individual cluster
+    for (k in 1:K){
+      x_grid$density <- density_list[[k]]
+      p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) +
+        grid_theme() + labs(caption = paste0("weight = ", round(weights[k], 3))) +
+        scale_fill_continuous(trans = "sqrt", type = "viridis",
+                              limits = c(0, max_point*2)) +
+        theme(legend.position = "none")
+      plots[[k]] <- p
+    }
+    
+    # Generate plot for final mixture
+    x_grid$density <- full_density
     p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
-      grid_theme() + labs(title = paste("Final mixture", draw_no)) +
-      scale_fill_gradient(low = "white", high = "red")
+      grid_theme() + labs(caption = "Final mixture") +
+      scale_fill_continuous(trans = "sqrt", type = "viridis",
+                            limits = c(0, max_point*2)) + 
+      theme(legend.position = "none")
     plots[[K + 1]] <- p 
     
-    final_plot <- ggarrange(plotlist = plots, nrow = 3, ncol = 3, 
-                            common.legend = TRUE)
-    #ggsave(filename, final_plot, width = 7, height = 7)
-    print(final_plot)
+    # Generate plot just for the legend
+    p_legend <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, 
+                                               fill = density)) + 
+      grid_theme() + labs(caption = "Final mixture") +
+      scale_fill_continuous(trans = "sqrt", type = "viridis",
+                            limits = c(0, max_point*2)) +  
+      theme(legend.position = "left")
+    shared_legend <- extract_legend(p_legend)
+    
+    # Combine all the plots into one including legend
+    plots$ncol <- 2
+    grob <- do.call(arrangeGrob, plots)
+    final_plot <- grid.arrange(grob, shared_legend, ncol = 2, 
+                               widths = c(8, 1), heights = c(28))
+    return(final_plot)
   }
   
+  # Return density if not plotting
   return(full_density)
 }

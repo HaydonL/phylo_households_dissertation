@@ -5,5 +5,7 @@
 #'
 #' @examples
 grid_theme <- function(){
-  theme(axis.text = element_blank())
+  theme(axis.title = element_blank(),
+        axis.text = element_blank(),
+        plot.caption = element_text(size = 10))
 }

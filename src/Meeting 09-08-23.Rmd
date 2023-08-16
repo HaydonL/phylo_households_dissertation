@@ -17,6 +17,8 @@ library(data.table)
 
 ## 1.1 Is there still as sizeable proportion of infections occuring within household?
 
+After 2015ish, from R16
+
 Using the logit model which includes all the data. Recall from the previous Rmd:
 
 1 : Female to male, out-of-household
