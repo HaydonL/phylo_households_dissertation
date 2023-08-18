@@ -7,21 +7,11 @@ library(bayesplot)
 library(data.table)
 color_scheme_set("brightblue")
 
-filename <- here::here("data", "pairs_tsi.csv")
+filename <- here::here("data", "pairs_tsi_clean.csv")
 modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP_ordered.stan")
 pairs_tsi <- read.csv(filename)
-
 setDT(pairs_tsi)
 
-# Check whether same household pairs are the same community
-same_hh_pairs <- pairs_tsi[same_hh == 1]
-source_comm <- same_hh_pairs[,.(COMM.SOURCE)]
-recip_comm <- same_hh_pairs[,.(COMM.RECIPIENT)]
-
-source_comm == recip_comm
-same_hh_pairs[81,] # Observation 226 to be removed from original data
-
-pairs_tsi <- pairs_tsi[-226,]
 
 # Set groups for model
 pairs_tsi[, same_comm := as.integer(COMM.SOURCE == COMM.RECIPIENT)]
@@ -60,6 +50,8 @@ for (row in 1:N){
 }
 
 pairs_tsi[, group := 1 + groups]
+
+write.csv(pairs_tsi, here::here("data", "Q1_2_data.csv"))
 
 stan_data <- list(
   N = pairs_tsi[, .N],

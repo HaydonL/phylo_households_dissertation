@@ -13,7 +13,7 @@ if(length(args_line) > 0)
 }
 
 # Process data
-filename <- file.path(indir, "data", "pairs_tsi.csv")
+filename <- file.path(indir, "data", "pairs_tsi_clean.csv")
 pairs_tsi <- read.csv(filename)
 
 setDT(pairs_tsi)
