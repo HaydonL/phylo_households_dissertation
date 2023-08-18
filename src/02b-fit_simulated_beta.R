@@ -7,7 +7,7 @@ library(bayesplot)
 color_scheme_set("brightblue")
 
 filename <- here::here("data", "simulated", "sim_1.csv")
-modelpath <- here::here("stan-models", "beta_mixture_DP.stan")
+modelpath <- here::here("stan-models", "beta_mixture_DP_ordered.stan")
 data <- read.csv(filename)
 
 stan_data <- list(

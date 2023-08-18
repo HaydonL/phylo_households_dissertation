@@ -7,7 +7,7 @@ library(bayesplot)
 color_scheme_set("brightblue")
 
 filename <- here::here("data", "simulated", "sim_1.csv")
-modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP.stan")
+modelpath <- here::here("stan-models", "logit_gaussian_mixture_DP_ordered.stan")
 data <- read.csv(filename)
 
 stan_data <- list(
@@ -32,4 +32,4 @@ fit <- model$sample(
   iter_sampling = 5000
 )
 
-fit$save_object(here::here("data", "logit_sim_1_draws.rds"))
+fit$save_object(here::here("data", "logit_sim_1_draws_ordered.rds"))
