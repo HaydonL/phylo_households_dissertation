@@ -5,7 +5,9 @@ library(ggplot2)
 library(gridExtra)
 library(Hmisc, include.only = "binconf")
 source(here::here("helper-functions", "plot_normal.R"))
+source(here::here("helper-functions", "plot_final_mixtures.R"))
 source(here::here("helper-functions", "grid_theme.R"))
+source(here::here("helper-functions", "sample_intensity.R"))
 
 ################################################################################
 # Create plots for simulated data --
@@ -36,9 +38,10 @@ fit <- readRDS(here::here("data", "logit_sim_1_draws_ordered.rds"))
 chain_no <- 1
 draw_no <- 2000
 group_no <- 1
-ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300) 
+ages <- seq(0 + 1e-5, 1 - 1e-5, length.out = 300) 
 
-p <- plot_normal(fit, chain_no, draw_no, group_no, ages)
+p <- plot_normal(fit, chain_no, draw_no, group_no, ages, min_age = 0, 
+                 max_age = 1)
 print(p)
 ggsave("logit_sim_1_mixture_C1D2000G1.pdf", p, height = 9.55)
 
@@ -52,6 +55,26 @@ setDT(pairs_tsi)
 
 # Load CmdStanR fits
 fit_norm <- readRDS(here::here("data", "logit_pairs_draws_ordered.rds"))
+
+#===============================================================================
+# Plot the different mixture densities for the four groups
+#===============================================================================
+
+ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
+captions <- c("Female to male, out-of-household",
+              "Female to male, same household",
+              "Male to female, out-of-household",
+              "Male to female, same household")
+
+# Calculate final mixture densities for each group
+mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
+                   draw_no = 1894, ages = ages, K = 5, min_age = min_age,
+                   max_age = max_age, plot = FALSE)
+
+# FIX PLOTTING CODE, NOT SHARING LEGEND
+p <- plot_final_mixtures(mixtures, 4, ages, captions)
+print(p)
+ggsave("pairs_mixtures.pdf", p, height = 6.55)
 
 #===============================================================================
 # Plot proportion of HH infections in general population
@@ -178,3 +201,77 @@ p <- ggplot(plot_data, aes(x = gender, y = median, fill = method)) +
   ylim(0, 0.5) + labs(y = "Proportion", x = NULL)
 
 ggsave("HH_prop_gender.pdf", p, width = 5)
+
+#===============================================================================
+# Plot who is infecting young men
+#===============================================================================
+
+intensity_FM_OOH <- sample_intensity(fit_norm, 1)
+intensity_FM_HH <- sample_intensity(fit_norm, 2)
+
+FM_OOH_CIs <- apply(intensity_FM_OOH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+FM_HH_CIs <- apply(intensity_FM_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+
+prop_FM_HH <- intensity_FM_HH / (intensity_FM_HH + intensity_FM_OOH)
+prop_FM_HH_CIs <- apply(prop_FM_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+
+# Create plots
+ages <- seq(15.5, 49.5, by = 1)
+FM_OOH_CIs <- as.data.frame(t(FM_OOH_CIs))
+names(FM_OOH_CIs) <- c("median", "LQ", "UQ")
+FM_OOH_CIs$ages <- ages
+FM_HH_CIs <- as.data.frame(t(FM_HH_CIs))
+names(FM_HH_CIs) <- c("median", "LQ", "UQ")
+FM_HH_CIs$ages <- ages
+
+p <- ggplot() + geom_line(aes(x = ages, y = median, color = "Out-of-household"), 
+                          data = FM_OOH_CIs, size = 1) +
+  geom_ribbon(aes(x = ages, ymin = LQ, ymax = UQ, fill = "Out-of-household"), 
+              data = FM_OOH_CIs, alpha = 0.4) +
+  geom_line(aes(x = ages, y = median, color = "Within household"), 
+            data = FM_HH_CIs, size = 1) +
+  geom_ribbon(aes(x = ages, ymin = LQ, ymax = UQ, fill = "Within-household"), 
+              data = FM_HH_CIs, alpha = 0.4) +
+  labs(x = "Age of source (Female)", y = "Relative intensity",
+       title = "FM transmission HH vs non-HH intensity",
+       caption = "Among young (16-24) recipients",
+       color = NULL)
+print(p)
+ggsave("FM_HH_age_intensity.pdf", p)
+
+#===============================================================================
+# Plot who is infecting young women
+#===============================================================================
+
+intensity_MF_OOH <- sample_intensity(fit_norm, 3)
+intensity_MF_HH <- sample_intensity(fit_norm, 4)
+
+MF_OOH_CIs <- apply(intensity_MF_OOH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+MF_HH_CIs <- apply(intensity_MF_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+
+prop_MF_HH <- intensity_MF_HH / (intensity_MF_HH + intensity_MF_OOH)
+prop_MF_HH_CIs <- apply(prop_MF_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+
+# Create plots
+ages <- seq(15.5, 49.5, by = 1)
+MF_OOH_CIs <- as.data.frame(t(MF_OOH_CIs))
+names(MF_OOH_CIs) <- c("median", "LQ", "UQ")
+MF_OOH_CIs$ages <- ages
+MF_HH_CIs <- as.data.frame(t(MF_HH_CIs))
+names(MF_HH_CIs) <- c("median", "LQ", "UQ")
+MF_HH_CIs$ages <- ages
+
+p <- ggplot() + geom_line(aes(x = ages, y = median, color = "Out-of-household"), 
+                          data = MF_OOH_CIs) +
+  geom_ribbon(aes(x = ages, ymin = LQ, ymax = UQ, fill = "Out-of-household"), 
+              data = MF_OOH_CIs, alpha = 0.4) +
+  geom_line(aes(x = ages, y = median, color = "Within household"), 
+            data = MF_HH_CIs) +
+  geom_ribbon(aes(x = ages, ymin = LQ, ymax = UQ, fill = "Within-household"), 
+              data = MF_HH_CIs, alpha = 0.4) +
+  labs(x = "Age of source (Male)", y = "Relative intensity",
+       title = "MF transmission HH vs non-HH intensity",
+       caption = "Among young (16-24) recipients",
+       color = NULL)
+print(p)
+ggsave("MF_HH_age_intensity.pdf", p)

@@ -29,7 +29,8 @@ fit <- model$sample(
   parallel_chains = 4,
   refresh = 500,
   iter_warmup = 3000,
-  iter_sampling = 5000
+  iter_sampling = 5000,
+  adapt_delta = 0.999
 )
 
 fit$save_object(here::here("data", "beta_sim_1_draws.rds"))

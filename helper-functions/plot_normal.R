@@ -4,6 +4,7 @@ library(gridExtra)
 source(here::here("helper-functions", "extract_data.R"))
 source(here::here("helper-functions", "grid_theme.R"))
 source(here::here("helper-functions", "extract_legend.R"))
+source(here::here("helper-functions", "pretty_scale.R"))
 #' Process the results from the logit normal model and produce a plots of the 
 #' sampled density for a given chain, draw, and group. Alternatively return the
 #' mixture density if not plotting
@@ -24,7 +25,9 @@ source(here::here("helper-functions", "extract_legend.R"))
 #' @examples
 plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5, 
                         min_age = 15, max_age = 50, plot = TRUE){
-  
+  cat("Plotting group:", group_no, "\n")
+  cat("Chain:", chain_no, "\n")
+  cat("Draw:", draw_no, "\n")
   params <- extract_data(fit, chain_no, draw_no)
   # Set up grid of plot points
   x <- ages
@@ -72,7 +75,7 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
   
   # Generate plot if required
   if (plot){
-    max_point <- max(unlist(full_density))
+    max_point <- max(unlist(density_list))
     plots <- list()
     
     # Store plots for each individual cluster
@@ -80,8 +83,7 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
       x_grid$density <- density_list[[k]]
       p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) +
         grid_theme() + labs(caption = paste0("weight = ", round(weights[k], 3))) +
-        scale_fill_continuous(trans = "sqrt", type = "viridis",
-                              limits = c(0, max_point*2)) +
+        pretty_scale(min_age, max_age, max_point) +
         theme(legend.position = "none")
       plots[[k]] <- p
     }
@@ -90,8 +92,7 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
     x_grid$density <- full_density
     p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
       grid_theme() + labs(caption = "Final mixture") +
-      scale_fill_continuous(trans = "sqrt", type = "viridis",
-                            limits = c(0, max_point*2)) + 
+      pretty_scale(min_age, max_age, max_point) + 
       theme(legend.position = "none")
     plots[[K + 1]] <- p 
     
@@ -99,8 +100,7 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
     p_legend <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, 
                                                fill = density)) + 
       grid_theme() + labs(caption = "Final mixture") +
-      scale_fill_continuous(trans = "sqrt", type = "viridis",
-                            limits = c(0, max_point*2)) +  
+      pretty_scale(min_age, max_age, max_point) +  
       theme(legend.position = "left")
     shared_legend <- extract_legend(p_legend)
     
