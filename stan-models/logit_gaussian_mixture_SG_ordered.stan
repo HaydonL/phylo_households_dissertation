@@ -1,18 +1,16 @@
 functions {
-  real SGb1_lpdf(real alpha, int a, int m){
+  real SG_lpdf(real alpha, int a, int b, int m){
     real density;
     array[m] real a_m;
-    array[m - 1] real s;
+    real log_s;
     
     for (i in 1:m){
       a_m[i] = alpha + i - 1;
     }
     
-    for (j in 1:(m - 1)){
-      s[j] = (-1)^(a + j) * j^(a - 2) * log(j) / (tgamma(j) * tgamma(m - j));
-    }
+    log_s = (a - b) * log(log(m)) + log(b) - lgamma(a - b);
     
-    density = (a - 1) * log(alpha) - sum(log(a_m)) - log(sum(s));
+    density = - log_s + (a - 1) * log(alpha) - sum(log(a_m));
     return(density);
   }
 }data {
@@ -59,7 +57,7 @@ model {
   
   group_counts ~ poisson(eta);
   for (group in 1:N_group){
-    alpha[group] ~ SGb1(K, 3);
+    alpha[group] ~ SG(3, 1, 50);
   }
   
   for (group in 1:N_group){

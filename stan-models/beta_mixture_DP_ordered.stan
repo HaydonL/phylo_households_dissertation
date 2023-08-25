@@ -45,9 +45,9 @@ parameters {
   array[N_group] vector<lower=0,upper=1>[K - 1] v;  // stickbreak components
   array[N_group] real<lower=0> alpha;  // hyper prior DP(alpha, base)
   array[N_group] real<lower=0> eta; // rate for PP 
-  array[N_group] ordered[K]<lower=0, upper=1> mus_1; 
-  array[N_group, K] real<lower=0, upper=1> mus_2; 
-  array[N_group, K, 2] real<lower=0> kappas;
+  array[N_group, K, 2] real<lower=0, upper=1> mus;
+  array[N_group] positive_ordered[K] kappas_1; 
+  array[N_group, K] real<lower=0> kappas_2;
   array[N_group, K] real psis;
 }
 
@@ -85,8 +85,8 @@ model {
       if (group == group_nos[i]){
         for(k in 1:K){
           ps[group, k] = log(weights[group,k]) + 
-          beta_bivariate_lpdf(scaled_age[i] | mus_1[group,k], kappas[group,k,1], 
-                                              mus_2[group,k], kappas[group,k,2], 
+          beta_bivariate_lpdf(scaled_age[i] | mus[group,k,1], kappas_1[group,k], 
+                                              mus[group,k,2], kappas_2[group,k], 
                                               psis[group,k]);
       }
       target += log_sum_exp(ps[group]);
@@ -94,9 +94,9 @@ model {
   }
   
   for (k in 1:K){
-    mus_1[group, k] ~ uniform(0, 1);
-    mus_2[group, k] ~ uniform(0, 1);
-    kappas[group, k] ~ inv_gamma(2, 2);
+    mus[group, k] ~ uniform(0, 1);
+    kappas_1[group, k] ~ inv_gamma(2, 2);
+    kappas_2[group, k] ~ inv_gamma(2, 2);
     psis[group, k] ~ uniform(psi_bounds[group, k, 1], psi_bounds[group, k, 2]);
   }
 }
