@@ -24,7 +24,7 @@ model <- cmdstan_model(modelpath)
 
 fit <- model$sample(
   data = stan_data, 
-  seed = 64519, 
+  seed = 6435177, 
   chains = 4,  
   parallel_chains = 4,
   refresh = 500,
