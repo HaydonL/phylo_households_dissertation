@@ -34,7 +34,8 @@ fit <- model$sample(
   parallel_chains = 4,
   refresh = 500,
   iter_warmup = 3000,
-  iter_sampling = 5000
+  iter_sampling = 5000,
+  adapt_delta = 0.99
 )
 
 fit$save_object(here::here("data", "logit_pairs_draws_ordered_SG.rds"))

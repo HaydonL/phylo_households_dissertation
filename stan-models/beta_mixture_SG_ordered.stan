@@ -91,7 +91,7 @@ model {
   
   group_counts ~ poisson(eta);
   for (group in 1:N_group){
-    alpha[group] ~ SG(3, 1, 50);
+    alpha[group] ~ SG(10, 5, group_counts[group]);
   }
   
   for (group in 1:N_group){
