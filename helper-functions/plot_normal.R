@@ -83,7 +83,6 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
       x_grid$density <- density_list[[k]]
       p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) +
         grid_theme() + labs(caption = paste0("weight = ", round(weights[k], 3))) +
-        pretty_scale(min_age, max_age, max_point) +
         theme(legend.position = "none")
       plots[[k]] <- p
     }
@@ -92,7 +91,6 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
     x_grid$density <- full_density
     p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
       grid_theme() + labs(caption = "Final mixture") +
-      pretty_scale(min_age, max_age, max_point) + 
       theme(legend.position = "none")
     plots[[K + 1]] <- p 
     
@@ -100,7 +98,6 @@ plot_normal <- function(fit, chain_no, draw_no, group_no, ages, K = 5,
     p_legend <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, 
                                                fill = density)) + 
       grid_theme() + labs(caption = "Final mixture") +
-      pretty_scale(min_age, max_age, max_point) +  
       theme(legend.position = "left")
     shared_legend <- extract_legend(p_legend)
     

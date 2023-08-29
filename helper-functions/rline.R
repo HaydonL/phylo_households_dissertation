@@ -21,6 +21,7 @@ rline <- function(n, sd){
     
     # Filter out observations where y not in (0,1)
     in_bounds <- y > 0 & y < 1
+    print(sum(in_bounds))
     x <- x[in_bounds]
     y <- y[in_bounds]
     

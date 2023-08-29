@@ -121,16 +121,35 @@ print(sort(unique(pairs_tsi$ROUND.M)))
 # Actual stuff starts here
 ################################################################################
 
+# Scatter plot of data
+
+plots <- list()
+captions <- c("Female to male, out-of-household",
+              "Female to male, same household",
+              "Male to female, out-of-household",
+              "Male to female, same household")
+
+for (group_no in 1:4){
+  group_data <- pairs_tsi[group == group_no]
+  p <- ggplot(group_data) +  geom_point(aes(x = AGE_TRANSMISSION.SOURCE, 
+                                            y = AGE_INFECTION.RECIPIENT)) + 
+    #geom_density_2d(aes(x = x, y = y)) +
+    theme(axis.title = element_blank()) + labs(caption = captions[group]) +
+    xlim(15, 50) + ylim(15, 50)
+  plots[[group_no]] <- p
+}
+
+plots$ncol <- 2
+grob <- do.call(arrangeGrob, plots)
+final_plot <- grid.arrange(grob, ncol = 1)
+ggsave("pairs_scatter.pdf", final_plot, height = 7.2)
+
 # Calculate number of observations by group
 pairs_tsi[,.N , by = group]
 # 174/92/217/126
 
 # Plot histograms by group: Age of sources
 plots <- list()
-captions <- c("Female to male, out-of-household",
-              "Female to male, same household",
-              "Male to female, out-of-household",
-              "Male to female, same household")
 
 for (group_no in 1:4){
   p <- ggplot(pairs_tsi[group == group_no]) + 

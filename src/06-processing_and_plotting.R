@@ -8,6 +8,7 @@ source(here::here("helper-functions", "plot_normal.R"))
 source(here::here("helper-functions", "plot_final_mixtures.R"))
 source(here::here("helper-functions", "grid_theme.R"))
 source(here::here("helper-functions", "sample_intensity.R"))
+source(here::here("helper-functions", "pretty_scale.R"))
 
 ################################################################################
 # Create plots for simulated data --
@@ -32,7 +33,7 @@ grob <- do.call(arrangeGrob, plots)
 final_plot <- grid.arrange(grob, ncol = 1)
 ggsave("sim_1_scatter.pdf", final_plot, height = 7.2)
 
-# Plot sampled mixture densities
+# Plot sampled mixture densities for uniform 
 
 fit <- readRDS(here::here("data", "logit_sim_1_draws_ordered.rds"))
 chain_no <- 1
@@ -44,6 +45,70 @@ p <- plot_normal(fit, chain_no, draw_no, group_no, ages, min_age = 0,
                  max_age = 1)
 print(p)
 ggsave("logit_sim_1_mixture_C1D2000G1.pdf", p, height = 9.55)
+
+# Plot actual densities vs sample
+
+ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
+captions <- c("Female to male, out-of-household",
+              "Female to male, same household",
+              "Male to female, out-of-household",
+              "Male to female, same household")
+
+# Calculate final mixture densities for each group
+mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
+                   draw_no = 1894, ages = ages, K = 5, min_age = 15,
+                   max_age = 50, plot = FALSE)
+
+plots <- list()
+
+for (group in 1:4){
+  x_grid <- expand.grid(ages, ages)
+  x_grid <- rbind(x_grid, c(100, 100))
+  x_grid$density <- c(mixtures[[group]], 1.1)
+  
+  # Plot heatmap of density
+  p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+    grid_theme() + labs(caption = captions[group]) +
+    pretty_scale() + 
+    theme(legend.position = "none",
+          panel.background = element_blank()) +
+    xlim(15, 50) + ylim(15, 50)
+  
+  plots[[group]] <- p
+}
+
+plots$ncol <- 2
+grob <- do.call(arrangeGrob, plots)
+
+# Get scale
+scale <- c(0, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1.1)
+x_grid <- expand.grid(1:3, 1:3)
+x_grid <- x_grid[1:8, ]
+x_grid$density <- scale
+
+colours <- c(
+  "white",
+  '#ffffcc',
+  "#edf8b1",
+  "#c7e9b4",
+  "#41b6c4",
+  "#1d91c0",
+  "#225ea8",
+  "#253494"
+)
+
+plot_for_legend <- ggplot(x_grid) + 
+  geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+  scale_fill_gradientn(breaks = scale, labels = scale, trans = "log10", 
+                       colours = colours) +
+  theme(legend.position = "right",
+        legend.key.height = unit(2, "cm"))
+
+legend <- extract_legend(plot_for_legend)
+
+final_plot <- grid.arrange(grob, legend, ncol = 2, widths = c(8, 1))
+print(final_plot)
+ggsave("pairs_mixtures.pdf", final_plot, height = 6.55)
 
 ################################################################################
 # Create plots for pairs data --
@@ -68,13 +133,58 @@ captions <- c("Female to male, out-of-household",
 
 # Calculate final mixture densities for each group
 mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
-                   draw_no = 1894, ages = ages, K = 5, min_age = min_age,
-                   max_age = max_age, plot = FALSE)
+                   draw_no = 1894, ages = ages, K = 5, min_age = 15,
+                   max_age = 50, plot = FALSE)
 
-# FIX PLOTTING CODE, NOT SHARING LEGEND
-p <- plot_final_mixtures(mixtures, 4, ages, captions)
-print(p)
-ggsave("pairs_mixtures.pdf", p, height = 6.55)
+source(here::here("helper-functions", "pretty_scale.R"))
+
+plots <- list()
+
+for (group in 1:4){
+  x_grid <- expand.grid(ages, ages)
+  x_grid <- rbind(x_grid, c(100, 100))
+  x_grid$density <- c(mixtures[[group]], 1.1)
+  
+  # Plot heatmap of density
+  p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+    grid_theme() + labs(caption = captions[group]) +
+    pretty_scale() + theme(legend.position = "none") +
+    xlim(15, 50) + ylim(15, 50)
+  
+  plots[[group]] <- p
+}
+
+plots$ncol <- 2
+grob <- do.call(arrangeGrob, plots)
+
+# Get scale
+scale <- c(0, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1.1)
+x_grid <- expand.grid(1:3, 1:3)
+x_grid <- x_grid[1:8, ]
+x_grid$density <- scale
+
+colours <- c(
+  "white",
+  '#ffffcc',
+  "#edf8b1",
+  "#c7e9b4",
+  "#41b6c4",
+  "#1d91c0",
+  "#225ea8",
+  "#253494"
+)
+
+plot_for_legend <- ggplot(x_grid) + 
+  geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+  scale_fill_gradientn(breaks = scale, labels = scale, trans = "log10", 
+                      colours = colours) +
+  theme(legend.position = "right",
+        legend.key.height = unit(2, "cm"))
+
+legend <- extract_legend(plot_for_legend)
+  
+final_plot <- grid.arrange(grob, legend, ncol = 2, widths = c(8, 1))
+ggsave("pairs_mixtures.pdf", final_plot, height = 6.55)
 
 #===============================================================================
 # Plot proportion of HH infections in general population
@@ -96,7 +206,7 @@ n_obs <- pairs_tsi[, .N]
 n_HH <- pairs_tsi[same_hh == 1, .N]
 HH_quant_freq <- binconf(n_HH, n_obs, alpha = 0.05) # 95% CI
 
-plot_data <- data.frame(method = c("Bayesian", "Frequentist"),
+plot_data <- data.frame(method = c("Bayesian", "Empirical"),
                   median = c(HH_quant_bayes[1], HH_quant_freq[1]),
                   lower = c(HH_quant_bayes[2], HH_quant_freq[2]),
                   upper = c(HH_quant_bayes[3], HH_quant_freq[3]))
@@ -142,7 +252,7 @@ n_HH_inl <- data_Q1_2[group == 2, .N]
 HH_fish_freq <- binconf(n_HH_fish, n_fish, alpha = 0.05) # 95% CI
 HH_inl_freq <- binconf(n_HH_inl, n_inl, alpha = 0.05) # 95% CI
 
-method <- c("Bayesian", "Bayesian", "Frequentist", "Frequentist")
+method <- c("Bayesian", "Bayesian", "Empirical", "Empirical")
 median <- c(HH_fish_bayes[1], HH_inl_bayes[1], HH_fish_freq[1], HH_inl_freq[1])
 lower <- c(HH_fish_bayes[2], HH_inl_bayes[2], HH_fish_freq[2], HH_inl_freq[2])
 upper <- c(HH_fish_bayes[3], HH_inl_bayes[3], HH_fish_freq[3], HH_inl_freq[3])
@@ -185,7 +295,7 @@ n_HH_FM <- pairs_tsi[SEX.SOURCE == "F" & same_hh == 1, .N]
 HH_MF_freq <- binconf(n_HH_MF, n_MF, alpha = 0.05) # 95% CI
 HH_FM_freq <- binconf(n_HH_FM, n_FM, alpha = 0.05) # 95% CI
 
-method <- c("Bayesian", "Bayesian", "Frequentist", "Frequentist")
+method <- c("Bayesian", "Bayesian", "Empirical", "Empirical")
 median <- c(HH_MF_bayes[1], HH_FM_bayes[1], HH_MF_freq[1], HH_FM_freq[1])
 lower <- c(HH_MF_bayes[2], HH_FM_bayes[2], HH_MF_freq[2], HH_FM_freq[2])
 upper <- c(HH_MF_bayes[3], HH_FM_bayes[3], HH_MF_freq[3], HH_FM_freq[3])
