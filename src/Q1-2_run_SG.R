@@ -54,9 +54,9 @@ pairs_tsi[, group := 1 + groups]
 write.csv(pairs_tsi, here::here("data", "Q1_2_data.csv"))
 
 stan_data <- list(
-  N = pairs_tsi[, .N],
+  N = pairs_tsi[group < 5, .N],
   K = 3,
-  N_group = 5,
+  N_group = 4,
   ages = as.matrix(pairs_tsi[, .(AGE_TRANSMISSION.SOURCE, 
                                  AGE_INFECTION.RECIPIENT)]),
   group_nos = pairs_tsi[, .(group)][[1]],
@@ -68,12 +68,13 @@ model <- cmdstan_model(modelpath)
 
 fit <- model$sample(
   data = stan_data, 
-  seed = 562859, 
+  seed = 28592, 
   chains = 4,  
   parallel_chains = 4,
   refresh = 500,
-  iter_warmup = 1000,
-  iter_sampling = 5000
+  iter_warmup = 3000,
+  iter_sampling = 5000,
+  adapt_delta = 0.95
 )
 
 fit$save_object(here::here("data", "logit_pairs_draws_1-2_SG.rds"))
