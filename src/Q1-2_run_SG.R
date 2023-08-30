@@ -57,9 +57,9 @@ stan_data <- list(
   N = pairs_tsi[group < 5, .N],
   K = 3,
   N_group = 4,
-  ages = as.matrix(pairs_tsi[, .(AGE_TRANSMISSION.SOURCE, 
+  ages = as.matrix(pairs_tsi[group < 5, .(AGE_TRANSMISSION.SOURCE, 
                                  AGE_INFECTION.RECIPIENT)]),
-  group_nos = pairs_tsi[, .(group)][[1]],
+  group_nos = pairs_tsi[group < 5, .(group)][[1]],
   min_age = 15,
   max_age = 50
 )
