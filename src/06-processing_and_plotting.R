@@ -23,7 +23,9 @@ for (group_no in 1:4){
   group_data <- sim_1[group == group_no]
   p <- ggplot(group_data) +  geom_point(aes(x = x, y = y)) + 
     geom_density_2d(aes(x = x, y = y)) +
-    grid_theme() + labs(caption = paste("Group:", group_no)) +
+    labs(caption = paste("Group:", group_no)) +
+    theme(panel.background = element_blank(),
+          axis.line = element_line()) +
     xlim(0, 1) + ylim(0, 1)
   plots[[group_no]] <- p
 }
@@ -35,80 +37,81 @@ ggsave("sim_1_scatter.pdf", final_plot, height = 7.2)
 
 # Plot sampled mixture densities for uniform 
 
-fit <- readRDS(here::here("data", "logit_sim_1_draws_ordered.rds"))
+fit <- readRDS(here::here("data", "logit_sim_1_draws_ordered_SG.rds"))
 chain_no <- 1
 draw_no <- 2000
 group_no <- 1
 ages <- seq(0 + 1e-5, 1 - 1e-5, length.out = 300) 
 
-p <- plot_normal(fit, chain_no, draw_no, group_no, ages, min_age = 0, 
+# PLOT MANUALLY AND FIX
+#p <- plot_normal(fit, chain_no, draw_no, group_no, ages, min_age = 0, 
                  max_age = 1)
-print(p)
-ggsave("logit_sim_1_mixture_C1D2000G1.pdf", p, height = 9.55)
+#print(p)
+#ggsave("logit_sim_1_mixture_C1D2000G1.pdf", p, height = 9.55)
 
 # Plot actual densities vs sample
 
-ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
-captions <- c("Female to male, out-of-household",
-              "Female to male, same household",
-              "Male to female, out-of-household",
-              "Male to female, same household")
-
-# Calculate final mixture densities for each group
-mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
-                   draw_no = 1894, ages = ages, K = 5, min_age = 15,
-                   max_age = 50, plot = FALSE)
-
-plots <- list()
-
-for (group in 1:4){
-  x_grid <- expand.grid(ages, ages)
-  x_grid <- rbind(x_grid, c(100, 100))
-  x_grid$density <- c(mixtures[[group]], 1.1)
-  
-  # Plot heatmap of density
-  p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
-    grid_theme() + labs(caption = captions[group]) +
-    pretty_scale() + 
-    theme(legend.position = "none",
-          panel.background = element_blank()) +
-    xlim(15, 50) + ylim(15, 50)
-  
-  plots[[group]] <- p
-}
-
-plots$ncol <- 2
-grob <- do.call(arrangeGrob, plots)
-
-# Get scale
-scale <- c(0, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1.1)
-x_grid <- expand.grid(1:3, 1:3)
-x_grid <- x_grid[1:8, ]
-x_grid$density <- scale
-
-colours <- c(
-  "white",
-  '#ffffcc',
-  "#edf8b1",
-  "#c7e9b4",
-  "#41b6c4",
-  "#1d91c0",
-  "#225ea8",
-  "#253494"
-)
-
-plot_for_legend <- ggplot(x_grid) + 
-  geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
-  scale_fill_gradientn(breaks = scale, labels = scale, trans = "log10", 
-                       colours = colours) +
-  theme(legend.position = "right",
-        legend.key.height = unit(2, "cm"))
-
-legend <- extract_legend(plot_for_legend)
-
-final_plot <- grid.arrange(grob, legend, ncol = 2, widths = c(8, 1))
-print(final_plot)
-ggsave("pairs_mixtures.pdf", final_plot, height = 6.55)
+#ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
+#captions <- c("Female to male, out-of-household",
+#              "Female to male, same household",
+#              "Male to female, out-of-household",
+#              "Male to female, same household")
+#
+## Calculate final mixture densities for each group
+#mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
+#                   draw_no = 1894, ages = ages, K = 5, min_age = 15,
+#                   max_age = 50, plot = FALSE)
+#
+#plots <- list()
+#
+#for (group in 1:4){
+#  x_grid <- expand.grid(ages, ages)
+#  x_grid <- rbind(x_grid, c(100, 100))
+#  x_grid$density <- c(mixtures[[group]], 1.1)
+#  
+#  # Plot heatmap of density
+#  p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+#    grid_theme() + labs(caption = captions[group]) +
+#    pretty_scale() + 
+#    theme(legend.position = "none",
+#          panel.background = element_blank()) +
+#    xlim(15, 50) + ylim(15, 50)
+#  
+#  plots[[group]] <- p
+#}
+#
+#plots$ncol <- 2
+#grob <- do.call(arrangeGrob, plots)
+#
+## Get scale
+#scale <- c(0, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1.1)
+#x_grid <- expand.grid(1:3, 1:3)
+#x_grid <- x_grid[1:8, ]
+#x_grid$density <- scale
+#
+#colours <- c(
+#  "white",
+#  '#ffffcc',
+#  "#edf8b1",
+#  "#c7e9b4",
+#  "#41b6c4",
+#  "#1d91c0",
+#  "#225ea8",
+#  "#253494"
+#)
+#
+#plot_for_legend <- ggplot(x_grid) + 
+#  geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+#  scale_fill_gradientn(breaks = scale, labels = scale, trans = "log10", 
+#                       colours = colours) +
+#  theme(legend.position = "right",
+#        legend.key.height = unit(2, "cm"))
+#
+#legend <- extract_legend(plot_for_legend)
+#
+#final_plot <- grid.arrange(grob, legend, ncol = 2, widths = c(8, 1))
+#print(final_plot)
+#ggsave("sim_1_mixtures.pdf", final_plot, height = 6.55)
 
 ################################################################################
 # Create plots for pairs data --
@@ -117,19 +120,43 @@ ggsave("pairs_mixtures.pdf", final_plot, height = 6.55)
 # Read in data
 pairs_tsi <- read.csv(here::here("data", "pairs_tsi_clean.csv"))
 setDT(pairs_tsi)
+pairs_tsi[, group := 1 + as.integer(2 * (SEX.SOURCE == "M") + same_hh)]
 
 # Load CmdStanR fits
-fit_norm <- readRDS(here::here("data", "logit_pairs_draws_ordered.rds"))
+fit_norm <- readRDS(here::here("data", "logit_pairs_draws_ordered_SG.rds"))
+
+# Make scatter plot of pairs data
+plots <- list()
+captions <- c("Female to male, out-of-household",
+              "Female to male, same household",
+              "Male to female, out-of-household",
+              "Male to female, same household")
+
+for (group_no in 1:4){
+  group_data <- pairs_tsi[group == group_no]
+  p <- ggplot(group_data, 
+              aes(x = AGE_TRANSMISSION.SOURCE, y = AGE_INFECTION.RECIPIENT)) +  
+    geom_point() + 
+    geom_density_2d() +
+    labs(caption = captions[group_no]) +
+    xlab("Age of source") +
+    ylab("Age of recipient") +
+    theme(panel.background = element_blank(),
+          axis.line = element_line()) +
+    xlim(15, 50) + ylim(15, 50)
+  plots[[group_no]] <- p
+}
+
+plots$ncol <- 2
+grob <- do.call(arrangeGrob, plots)
+final_plot <- grid.arrange(grob, ncol = 1)
+ggsave("pairs_scatter.pdf", final_plot, height = 7.2)
 
 #===============================================================================
 # Plot the different mixture densities for the four groups
 #===============================================================================
 
 ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
-captions <- c("Female to male, out-of-household",
-              "Female to male, same household",
-              "Male to female, out-of-household",
-              "Male to female, same household")
 
 # Calculate final mixture densities for each group
 mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
@@ -219,6 +246,14 @@ p <- ggplot(plot_data) + geom_bar(aes(x = method, y = median, fill = method),
   theme(legend.position = "none")
 ggsave("HH_prop.pdf", p, width = 4)
 
+p2 <- ggplot(as.data.frame(eta_HH_prop)) + 
+  geom_histogram(aes(x = eta_HH_prop)) +
+  xlab("Proportion of household infections") +
+  ylab("Frequency") +
+  theme(panel.background = element_blank(),
+        axis.line = element_line())
+ggsave("HH_prop_hist.pdf", p2, width = 4)
+
 #===============================================================================
 # Plot proportion of HH infections by community
 #===============================================================================
@@ -227,7 +262,7 @@ ggsave("HH_prop.pdf", p, width = 4)
 data_Q1_2 <- read.csv(here::here("data", "Q1_2_data.csv"))
 setDT(data_Q1_2)
 
-# Load CmdStanR fit
+# Load CmdStanR fit # CHANGE LATER WHEN MODEL FIXED
 fit_1_2 <- readRDS(here::here("data", "logit_pairs_draws_1-2.rds"))
 
 # Extract rates (eta)

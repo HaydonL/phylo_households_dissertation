@@ -19,7 +19,7 @@ plot_beta <- function(mus, kappas, psi){
     labs(title = paste("Parameters:", mus[1], mus[2], kappas[1], kappas[2], psi, 
                        sep = ", "),
          subtitle = paste0("Correlation: ", round(beta_corr(mus, kappas, psi), 3))) +
-    grid_theme() + scale_fill_continuous(trans = "log10", type = "viridis")
+    grid_theme() + scale_fill_continuous(type = "viridis")
   return(p)
 }
 
@@ -58,7 +58,7 @@ psi_bounds(mus)
 plots <- list()
 
 plots[[1]] <- plot_beta(mus = c(0.5, 0.5), kappas = c(1, 1), psi = 0)
-plots[[2]] <- plot_beta(mus = c(0.5, 0.5), kappas = c(1, 1), psi = 4)
+plots[[2]] <- plot_beta(mus = c(0.5, 0.5), kappas = c(2, 2), psi = 4)
 plots[[3]] <- plot_beta(mus = c(0.5, 0.5), kappas = c(5, 5), psi = 0)
 plots[[4]] <- plot_beta(mus = c(0.2, 0.8), kappas = c(5, 5), 
                         psi = psi_bounds(c(0.2, 0.8))[1])

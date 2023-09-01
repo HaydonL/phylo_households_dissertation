@@ -28,14 +28,14 @@ get_group <- function(same_hh, same_comm, comm_source){
   }
   # Different household
   else{ 
-    if (same_comm == 0){
-      return(2) # Inter-community transmission
+    if (same_comm == 1 & comm_source == "fishing"){
+      return(2) # Fishing only
     }
-    else if(comm_source == "fishing"){
-      return(3) # Fishing only
+    else if(same_comm == 1 & comm_source == "inland"){
+      return(3) # Inland only
     }
     else{
-      return(4) # Inland only
+      return(4) # Inter-community
     }
   }
 }
@@ -55,7 +55,7 @@ write.csv(pairs_tsi, here::here("data", "Q1_2_data.csv"))
 
 stan_data <- list(
   N = pairs_tsi[group < 5, .N],
-  K = 3,
+  K = 4,
   N_group = 4,
   ages = as.matrix(pairs_tsi[group < 5, .(AGE_TRANSMISSION.SOURCE, 
                                  AGE_INFECTION.RECIPIENT)]),
@@ -77,4 +77,4 @@ fit <- model$sample(
   adapt_delta = 0.95
 )
 
-fit$save_object(here::here("data", "logit_pairs_draws_1-2_SG.rds"))
+fit$save_object(here::here("data", "logit_pairs_draws_1-2_SG_K4.rds"))
