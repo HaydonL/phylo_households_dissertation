@@ -5,10 +5,9 @@ library(ggplot2)
 library(gridExtra)
 library(Hmisc, include.only = "binconf")
 source(here::here("helper-functions", "plot_normal.R"))
-source(here::here("helper-functions", "plot_final_mixtures.R"))
+source(here::here("helper-functions", "plot_mixtures.R"))
 source(here::here("helper-functions", "grid_theme.R"))
 source(here::here("helper-functions", "sample_intensity.R"))
-source(here::here("helper-functions", "pretty_scale.R"))
 
 ################################################################################
 # Create plots for simulated data --
@@ -41,13 +40,48 @@ fit <- readRDS(here::here("data", "logit_sim_1_draws_ordered_SG.rds"))
 chain_no <- 1
 draw_no <- 2000
 group_no <- 1
-ages <- seq(0 + 1e-5, 1 - 1e-5, length.out = 300) 
+ages <- seq(0.001, 0.999, length.out = 300) 
 
-# PLOT MANUALLY AND FIX
-#p <- plot_normal(fit, chain_no, draw_no, group_no, ages, min_age = 0, 
-                 max_age = 1)
-#print(p)
-#ggsave("logit_sim_1_mixture_C1D2000G1.pdf", p, height = 9.55)
+# Calculate final mixture densities for each group
+output <- plot_mixtures(fit, chain_no, draw_no, group_no, ages, min_age = 0,
+                          max_age = 1, plot = FALSE)
+
+plots <- list()
+
+for (group in 1:6){
+  x_grid <- expand.grid(ages, ages)
+  x_grid$density <- output$densities[[group]]
+  
+  # Plot heatmap of density
+  if (group < 6){
+    p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+      grid_theme() + 
+      theme(panel.background = element_blank(),
+            axis.line = element_line()) + 
+      scale_fill_continuous(type = "viridis") +
+      labs(caption = paste0("Component ", group,", weight = ", 
+                           output$weight[group])) +
+      xlim(0, 1) + ylim(0, 1)
+  }
+  else {
+    p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
+      grid_theme() + 
+      theme(panel.background = element_blank(),
+            axis.line = element_line()) +
+      scale_fill_continuous(type = "viridis", trans = "log",
+                            labels = function(x) sprintf("%.2f", x)) +
+      labs(caption = "Final mixture") +
+      xlim(0, 1) + ylim(0, 1)
+  }
+
+  plots[[group]] <- p
+}
+
+plots$ncol <- 3
+grob <- do.call(arrangeGrob, plots)
+
+final_plot <- grid.arrange(grob, ncol = 1, widths = c(10))
+ggsave("logit_sim_1_mixture_C1D2000G1_flip.pdf", final_plot, width = 10, height = 5.5)
 
 # Plot actual densities vs sample
 
@@ -138,7 +172,10 @@ for (group_no in 1:4){
               aes(x = AGE_TRANSMISSION.SOURCE, y = AGE_INFECTION.RECIPIENT)) +  
     geom_point() + 
     geom_density_2d() +
+    geom_abline(slope = 1, intercept = 0, linetype = 2, colour = "red") +
     labs(caption = captions[group_no]) +
+    annotate("text", x = 19, y = 47, 
+             label = paste("N =", pairs_tsi[group == group_no, .N])) +
     xlab("Age of source") +
     ylab("Age of recipient") +
     theme(panel.background = element_blank(),
@@ -156,26 +193,35 @@ ggsave("pairs_scatter.pdf", final_plot, height = 7.2)
 # Plot the different mixture densities for the four groups
 #===============================================================================
 
-ages <- seq(15 + 1e-5, 50 - 1e-5, length.out = 300)
+ages <- seq(15.05, 49.95, length.out = 300)
 
 # Calculate final mixture densities for each group
 mixtures <- lapply(1:4, plot_normal, fit = fit_norm, chain_no = 2,
                    draw_no = 1894, ages = ages, K = 5, min_age = 15,
                    max_age = 50, plot = FALSE)
 
-source(here::here("helper-functions", "pretty_scale.R"))
-
+pretty <- scale_fill_gradientn(colours = c(
+  "white",
+  "#ffffd9",
+  "#7fcdbb",
+  "#225ea8",
+  "#253494",
+  "#081d58"
+  ),
+  values = seq(0, 1, by = 0.2),
+  na.value = "grey90")
+# Max 0.01
 plots <- list()
 
 for (group in 1:4){
   x_grid <- expand.grid(ages, ages)
   x_grid <- rbind(x_grid, c(100, 100))
-  x_grid$density <- c(mixtures[[group]], 1.1)
+  x_grid$density <- c(mixtures[[group]], 0.009)
   
   # Plot heatmap of density
   p <- ggplot(x_grid) + geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
     grid_theme() + labs(caption = captions[group]) +
-    pretty_scale() + theme(legend.position = "none") +
+    pretty + theme(legend.position = "none") +
     xlim(15, 50) + ylim(15, 50)
   
   plots[[group]] <- p
@@ -184,27 +230,9 @@ for (group in 1:4){
 plots$ncol <- 2
 grob <- do.call(arrangeGrob, plots)
 
-# Get scale
-scale <- c(0, 1e-5, 5e-5, 1e-4, 5e-4, 1e-3, 5e-3, 1.1)
-x_grid <- expand.grid(1:3, 1:3)
-x_grid <- x_grid[1:8, ]
-x_grid$density <- scale
-
-colours <- c(
-  "white",
-  '#ffffcc',
-  "#edf8b1",
-  "#c7e9b4",
-  "#41b6c4",
-  "#1d91c0",
-  "#225ea8",
-  "#253494"
-)
-
 plot_for_legend <- ggplot(x_grid) + 
   geom_tile(aes(x = Var1, y = Var2, fill = density)) + 
-  scale_fill_gradientn(breaks = scale, labels = scale, trans = "log10", 
-                      colours = colours) +
+  pretty +
   theme(legend.position = "right",
         legend.key.height = unit(2, "cm"))
 
@@ -261,9 +289,46 @@ ggsave("HH_prop_hist.pdf", p2, width = 4)
 # Load in pairs data with groups for this question
 data_Q1_2 <- read.csv(here::here("data", "Q1_2_data.csv"))
 setDT(data_Q1_2)
+# Set groups for model
+data_Q1_2[, same_comm := as.integer(COMM.SOURCE == COMM.RECIPIENT)]
+
+get_group <- function(same_hh, same_comm, comm_source){
+  # Same household
+  if (same_hh == 1){
+    if (comm_source == "fishing"){ # Fishing
+      return(0)
+    }
+    else{ # Inland
+      return(1)
+    }
+  }
+  # Different household
+  else{ 
+    if (same_comm == 1 & comm_source == "fishing"){
+      return(2) # Fishing only
+    }
+    else if(same_comm == 1 & comm_source == "inland"){
+      return(3) # Inland only
+    }
+    else{
+      return(4) # Inter-community
+    }
+  }
+}
+
+N <- nrow(data_Q1_2)
+groups <- numeric(N)
+for (row in 1:N){
+  same_hh <- as.integer(data_Q1_2[row, .(same_hh)])
+  same_comm <- as.integer(data_Q1_2[row, .(same_comm)])
+  comm_source <- as.character(data_Q1_2[row, .(COMM.SOURCE)])
+  groups[row] <- get_group(same_hh, same_comm, comm_source)
+}
+
+data_Q1_2[, group := 1 + groups]
 
 # Load CmdStanR fit # CHANGE LATER WHEN MODEL FIXED
-fit_1_2 <- readRDS(here::here("data", "logit_pairs_draws_1-2.rds"))
+fit_1_2 <- readRDS(here::here("data", "logit_pairs_draws_1-2_SG_K4.rds"))
 
 # Extract rates (eta)
 eta_draws <- as_draws_matrix(fit_1_2$draws("eta"))
@@ -272,16 +337,16 @@ eta_sums <- rowSums(eta_draws)
 eta_prop <- eta_draws / eta_sums
 
 # Check proportion of HH vs OOH for both fishing and inland
-eta_HH_fishing <- eta_prop[, 1] / rowSums(eta_prop[, c(1, 4)])
-eta_HH_inland <- eta_prop[, 2] / rowSums(eta_prop[, c(2, 5)])
+eta_HH_fishing <- eta_prop[, 1] / rowSums(eta_prop[, c(1, 3)])
+eta_HH_inland <- eta_prop[, 2] / rowSums(eta_prop[, c(2, 4)])
 
 HH_fish_bayes <- quantile(eta_HH_fishing, c(0.5, 0.025, 0.975)) 
 HH_inl_bayes <- quantile(eta_HH_inland, c(0.5, 0.025, 0.975))
 
 # Calculate frequentist CIs assuming binomial data
-n_fish <- data_Q1_2[group %in% c(1, 4), .N]
+n_fish <- data_Q1_2[group %in% c(1, 3), .N]
 n_HH_fish <- data_Q1_2[group == 1, .N]
-n_inl <- data_Q1_2[group %in% c(2, 5), .N]
+n_inl <- data_Q1_2[group %in% c(2, 4), .N]
 n_HH_inl <- data_Q1_2[group == 2, .N]
 
 HH_fish_freq <- binconf(n_HH_fish, n_fish, alpha = 0.05) # 95% CI
@@ -354,11 +419,11 @@ ggsave("HH_prop_gender.pdf", p, width = 5)
 intensity_FM_OOH <- sample_intensity(fit_norm, 1)
 intensity_FM_HH <- sample_intensity(fit_norm, 2)
 
-FM_OOH_CIs <- apply(intensity_FM_OOH, 1, quantile, probs = c(0.5, 0.025, 0.975))
-FM_HH_CIs <- apply(intensity_FM_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+FM_OOH_CIs <- apply(intensity_FM_OOH, 1, quantile, probs = c(0.5, 0.05, 0.95))
+FM_HH_CIs <- apply(intensity_FM_HH, 1, quantile, probs = c(0.5, 0.05, 0.95))
 
 prop_FM_HH <- intensity_FM_HH / (intensity_FM_HH + intensity_FM_OOH)
-prop_FM_HH_CIs <- apply(prop_FM_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+prop_FM_HH_CIs <- apply(prop_FM_HH, 1, quantile, probs = c(0.5, 0.05, 0.95))
 
 # Create plots
 ages <- seq(15.5, 49.5, by = 1)
@@ -379,7 +444,7 @@ p <- ggplot() + geom_line(aes(x = ages, y = median, color = "Out-of-household"),
               data = FM_HH_CIs, alpha = 0.4) +
   labs(x = "Age of source (Female)", y = "Relative intensity",
        title = "FM transmission HH vs non-HH intensity",
-       caption = "Among young (16-24) recipients",
+       caption = "Among young (15-24) recipients",
        color = NULL)
 print(p)
 ggsave("FM_HH_age_intensity.pdf", p)
@@ -391,11 +456,11 @@ ggsave("FM_HH_age_intensity.pdf", p)
 intensity_MF_OOH <- sample_intensity(fit_norm, 3)
 intensity_MF_HH <- sample_intensity(fit_norm, 4)
 
-MF_OOH_CIs <- apply(intensity_MF_OOH, 1, quantile, probs = c(0.5, 0.025, 0.975))
-MF_HH_CIs <- apply(intensity_MF_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+MF_OOH_CIs <- apply(intensity_MF_OOH, 1, quantile, probs = c(0.5, 0.05, 0.95))
+MF_HH_CIs <- apply(intensity_MF_HH, 1, quantile, probs = c(0.5, 0.05, 0.95))
 
 prop_MF_HH <- intensity_MF_HH / (intensity_MF_HH + intensity_MF_OOH)
-prop_MF_HH_CIs <- apply(prop_MF_HH, 1, quantile, probs = c(0.5, 0.025, 0.975))
+prop_MF_HH_CIs <- apply(prop_MF_HH, 1, quantile, probs = c(0.5, 0.05, 0.95))
 
 # Create plots
 ages <- seq(15.5, 49.5, by = 1)
@@ -416,7 +481,7 @@ p <- ggplot() + geom_line(aes(x = ages, y = median, color = "Out-of-household"),
               data = MF_HH_CIs, alpha = 0.4) +
   labs(x = "Age of source (Male)", y = "Relative intensity",
        title = "MF transmission HH vs non-HH intensity",
-       caption = "Among young (16-24) recipients",
+       caption = "Among young (15-24) recipients",
        color = NULL)
 print(p)
 ggsave("MF_HH_age_intensity.pdf", p)

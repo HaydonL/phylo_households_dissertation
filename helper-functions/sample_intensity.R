@@ -17,8 +17,8 @@ sample_intensity <- function(fit, group){
   
   # Create grid of ages and list of draw numbers
   ages <- seq(15.5, 49.5, by = 1)
-  draws_per_chain <- draws <- seq(50, 5000, by = 50) 
-  draws <- seq(50, 20000, by = 50)
+  draws_per_chain <- draws <- seq(10, 5000, by = 10) 
+  draws <- seq(10, 20000, by = 10)
   grid <- expand.grid(ages, ages)
   
   # Create cluster for parallel programming
@@ -29,7 +29,7 @@ sample_intensity <- function(fit, group){
   clusterEvalQ(cl, library(mvtnorm))
   eta_draws <- as_draws_matrix(fit$draws("eta"))
   
-  # Calculate densities for 200 iterations
+  # Calculate densities for iterations
   intensity_list <- list()
   for (chain_no in 1:4){
     intensities_tmp <- parLapply(cl, draws_per_chain, plot_normal, fit = fit, 

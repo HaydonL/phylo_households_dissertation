@@ -21,8 +21,9 @@ pretty_scale <- function(){
     "#41b6c4",
     "#1d91c0",
     "#225ea8",
-    "#253494"
-    # "#081d58"
+    "#253494",
+    "#081d58"
+    
   )),
   values = scale,
   na.value = "grey90")
